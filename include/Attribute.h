@@ -1,7 +1,7 @@
 #ifndef ATTRIBUTE_H
 #define ATTRIBUTE_H
 
-#include <tinyxml.h>
+#include "tinyxml.h"
 #include <sstream>
 
 namespace xmlpp

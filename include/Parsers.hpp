@@ -13,12 +13,12 @@
 namespace xmlpp
 {
     /** Error during serialization */
-    class SerializationError :
+    class ParserError :
         public std::runtime_error
     {
     public:
-        SerializationError() : std::runtime_error("Error during serialization") {}
-        SerializationError(const std::string& err) :
+        ParserError() : std::runtime_error("Error during parsing") {}
+        ParserError(const std::string& err) :
             std::runtime_error(err) {}
     };
 
@@ -28,7 +28,7 @@ namespace xmlpp
     {
     public:
         /** Serialize item to the node */
-        virtual void Serialize(D& document, Node& node) const = 0;
+        virtual void Save(D& document, Node& node) const = 0;
 
         virtual ~Serializable() {}
     };
@@ -39,7 +39,7 @@ namespace xmlpp
     {
     public:
         /** Deserialize item from the node */
-        virtual void Deserialize(const D& document, const Node& node) = 0;
+        virtual void Load(const D& document, const Node& node) = 0;
 
         virtual ~Deserializable() {}
     };
@@ -50,7 +50,7 @@ namespace xmlpp
      * @param xml element containing item
      */
     template<class T, class D>
-    void SerializeToStream(T* item, const D& document, const Node& node)
+    void save_to_stream(T* item, const D& document, const Node& node)
     {
         std::istringstream sstr;
         sstr << *item;
@@ -63,9 +63,21 @@ namespace xmlpp
      * @param xml element for item
      */
     template<class D>
-    void Serialize(Deserializable<D> const* item, D& document, Node& node)
+    void save(Deserializable<D> const* item, D& document, Node& node)
     {
-        item->Serialize(document, node);
+        item->Save(document, node);
+    }
+
+    /** Load object from the stream
+     * @param object to deserialize
+     * @param xml document
+     * @param xml element containing item
+     */
+    template<class T, class D>
+    void load_from_stream(T* item, const D& document, const Node& node)
+    {
+        std::istringstream sstr( Element(node).Text() );
+        sstr >> *item;
     }
 
     /** Load deserializable
@@ -74,43 +86,31 @@ namespace xmlpp
      * @param xml element containing item
      */
     template<class D>
-    void Deserialize(Deserializable<D>* item, const D& document, const Node& node)
+    void load(Deserializable<D>* item, const D& document, const Node& node)
     {
-        item->Deserialize(document, node);
-    }
-
-    /** Deserialize object from the stream
-     * @param object to deserialize
-     * @param xml document
-     * @param xml element containing item
-     */
-    template<class T, class D>
-    void DeserializeFromStream(T* item, const D& document, const Node& node)
-    {
-        std::istringstream sstr( Element(node).Text() );
-        sstr >> *item;
+        item->Load(document, node);
     }
 
     /** Get function object for serializing object into the stream */
     template<class D, class T>
     boost::function<void (D&, Node&)> stream_s(T const* item)
     {
-        return boost::bind(SerializeToStream<T,D>, item, _1, _2);
+        return boost::bind(save_to_stream<T,D>, item, _1, _2);
     }
 
     /** Get function object for deserializing object from the stream */
     template<class D, class T>
-    boost::function<void (const D&, const Node&)> stream_d(T* item)
+    boost::function<void (const D&, const Node&)> stream_l(T* item)
     {
-        return boost::bind(DeserializeFromStream<T,D>, item, _1, _2);
+        return boost::bind(load_from_stream<T,D>, item, _1, _2);
     }
 
-    /** Generated serializer */
+    /** Generated saver */
     template<class D>
-    class GenericSerializer
+    class GenericSaver
     {
     private:
-        typedef boost::function<void (D&, Node&)> serializer;
+        typedef boost::function<void (D&, Node&)>   serializer;
 
         typedef std::pair<std::string, serializer>  serializer_pair;
         typedef std::vector<serializer_pair>        serializer_vector;
@@ -126,7 +126,7 @@ namespace xmlpp
                 Element nameElem(serializers[i].first);
                 Element valueElem;
 
-                serializers[i].Serialize(document, valueElem);
+                serializers[i].Save(document, valueElem);
 
                 document.AddChild(nameElem, valueElem);
                 document.AddChild(node, nameElem);
@@ -158,14 +158,14 @@ namespace xmlpp
          */
         void Attach(const std::string& name, Serializable<D> const* item)
         {
-            serializer d = boost::bind(Serialize<D>, item, _1, _2);
-            serializers.push_back( serializer_pair(name, d) );
+            serializer s = boost::bind(save<D>, item, _1, _2);
+            serializers.push_back( serializer_pair(name, s) );
         }
     };
 
-    /** Generated deserializer */
+    /** Generated loader */
     template<class D>
-    class GenericDeserializer
+    class GenericLoader
     {
     private:
         typedef boost::function<void (const D&, const Node&)> deserializer;
@@ -185,7 +185,7 @@ namespace xmlpp
             {
                 typename deserializer_map::const_iterator j = deserializers.find( i->Value() );
                 if ( j == deserializers.end() ) {
-                    throw SerializationError("Serializer for element '" + i->Value() + "' unspecified");
+                    throw ParserError("Loader for element '" + i->Value() + "' unspecified");
                 }
 
                 j->second(document, *i);
@@ -208,7 +208,7 @@ namespace xmlpp
         template<class T>
         void AttachStreamD(const std::string& name, T* item)
         {
-            deserializers.insert( deserializer_pair( name, stream_d<D,T>(item) ) );
+            deserializers.insert( deserializer_pair( name, stream_l<D,T>(item) ) );
         }
 
         /** Attach deserializable item
@@ -217,7 +217,7 @@ namespace xmlpp
          */
         void Attach(const std::string& name, Deserializable<D>* item)
         {
-            deserializer d = boost::bind(Deserialize<D>, item, _1, _2);
+            deserializer d = boost::bind(load<D>, item, _1, _2);
             deserializers.insert( deserializer_pair(name, d) );
         }
     };

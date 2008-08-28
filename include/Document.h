@@ -4,7 +4,6 @@
 #include <map>
 #include <stdexcept>
 #include "Element.h"
-#include "Serialization.hpp"
 
 namespace xmlpp
 {
