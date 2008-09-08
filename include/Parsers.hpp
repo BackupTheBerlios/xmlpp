@@ -8,6 +8,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
+#include <boost/type_traits/ice.hpp>
 #include "Document.h"
 
 namespace xmlpp
@@ -216,7 +217,15 @@ namespace xmlpp
          * @param item for serialization
          */
         template<class T>
-        void Attach(const std::string& name, T const* item)
+        void Attach( const std::string& name,
+                     T const* item,
+                     typename boost::enable_if
+                              <
+                                  boost::type_traits::ice_not
+                                  <
+                                      boost::is_convertible< T*, Serializable<D>* >::value
+                                  >
+                              >::type* dummy = 0 )
         {
             serializers.push_back( serializer_pair( name, stream_serializer<T,D>(item) ) );
         }
@@ -275,7 +284,15 @@ namespace xmlpp
          * @param item for deserialization
          */
         template<class T>
-        void Attach(const std::string& name, T* item)
+        void Attach( const std::string&     name,
+                     T*                     item,
+                     typename boost::enable_if
+                              <
+                                  boost::type_traits::ice_not
+                                  <
+                                      boost::is_convertible< T*, Deserializable<D>* >::value
+                                  >
+                              >::type* dummy = 0 )
         {
             deserializers.insert( deserializer_pair(name, stream_deserializer<T,D>(item)) );
         }

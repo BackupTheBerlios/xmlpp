@@ -9,7 +9,8 @@ typedef GenericLoader<Document> generic_loader;
 
 enum COLOR { RED, GREEN, BLUE };
 
-class Car
+class Car :
+    public Deserializable<Document>
 {
 private:
     std::string     vendor;
@@ -90,7 +91,6 @@ void LoadCarAndAddToStore(vector<Car>& store, const Document& d, const Node& n)
     car.Load(d, n);
     store.push_back(car);
 }
-
 
 int main(void)
 {
