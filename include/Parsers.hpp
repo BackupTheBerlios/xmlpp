@@ -44,18 +44,86 @@ namespace xmlpp
         virtual ~Deserializable() {}
     };
 
+    /** class deserializes object from the stream using operator >> */
+    template<class T, class D>
+    class stream_deserializer
+    {
+    private:
+        T*  item;
+
+    public:
+        stream_deserializer(T* _item) :
+            item(_item) {}
+        stream_deserializer(const stream_deserializer& ss) :
+            item(ss.item) {}
+
+        /** serialize item into the stream */
+        void operator() (const D& document, const Node& node) const
+        {
+            std::istringstream sstr( Element(node).Text() );
+            sstr >> *item;
+        }
+    };
+
+    /** class serializes object to the stream using operator << */
+    template<class T, class D>
+    class stream_serializer
+    {
+    private:
+        T const*    item;
+
+    public:
+        stream_serializer(T const* _item) :
+            item(_item) {}
+        stream_serializer(const stream_serializer& ss) :
+            item(ss.item) {}
+
+        /** serialize item into the stream */
+        void operator() (D& document, Node& node) const
+        {
+            std::istringstream sstr;
+            sstr << *item;
+            Element(node).SetText( sstr.str() );
+        }
+    };
+
+    /** Create serializer for container serialization
+     * @param container to serialize
+     * @return serializer for container serialization
+     */
+    template<class CT, class D>
+    boost::function<void (D&, Node&)> container_s(const CT& container)
+    {
+        return for_each( container.begin(),
+                          container.end(),
+                          bind(&Serializable<D>::Save, _1, _2, _3) );
+    }
+
+    /** Create serializer for container serialization
+     * @param container to serialize
+     * @param item serializer for items in the container
+     * @return serializer for container serialization
+     */
+    template<class CT, class D, class S>
+    boost::function<void (D&, Node&)> container_s( const CT& container,
+                                                    const S& s )
+    {
+        return for_each( container.begin(),
+                          container.end(),
+                          bind(s, _1, _2, _3) );
+    }
     /** Serialize object into the stream
      * @param object to deserialize
      * @param xml document
      * @param xml element containing item
-     */
+     *
     template<class T, class D>
     void save_to_stream(T* item, const D& document, const Node& node)
     {
         std::istringstream sstr;
         sstr << *item;
         Element(node).SetText( sstr.str() );
-    }
+    }*/
 
     /** Save serializable
      * @param serializable object
@@ -72,13 +140,13 @@ namespace xmlpp
      * @param object to deserialize
      * @param xml document
      * @param xml element containing item
-     */
+     *
     template<class T, class D>
     void load_from_stream(T* item, const D& document, const Node& node)
     {
         std::istringstream sstr( Element(node).Text() );
         sstr >> *item;
-    }
+    }*/
 
     /** Load deserializable
      * @param deserializable object
@@ -93,16 +161,16 @@ namespace xmlpp
 
     /** Get function object for serializing object into the stream */
     template<class D, class T>
-    boost::function<void (D&, Node&)> stream_s(T const* item)
+    stream_serializer<T,D> stream_s(T const* item)
     {
-        return boost::bind(save_to_stream<T,D>, item, _1, _2);
+        return stream_serializer<T,D>(item);
     }
 
     /** Get function object for deserializing object from the stream */
     template<class D, class T>
-    boost::function<void (const D&, const Node&)> stream_l(T* item)
+    stream_deserializer<T,D> stream_d(T* item)
     {
-        return boost::bind(load_from_stream<T,D>, item, _1, _2);
+        return stream_deserializer<T,D>(item);
     }
 
     /** Generated saver */
@@ -118,7 +186,7 @@ namespace xmlpp
         serializer_vector serializers;
 
     public:
-        /** Deserialize item from the node */
+        /** Serializer item to the node */
         void operator() (D& document, Node& node) const
         {
             for(size_t i = 0; i < serializers.size(); ++i)
@@ -142,14 +210,15 @@ namespace xmlpp
             serializers.push_back( serializer_pair(name, d) );
         }
 
+
         /** Attach item using stream serializer
          * @param name of the element to serialize
          * @param item for serialization
          */
         template<class T>
-        void AttachStreamS(const std::string& name, T const* item)
+        void Attach(const std::string& name, T const* item)
         {
-            serializers.push_back( serializer_pair( name, stream_s<D,T>(item) ) );
+            serializers.push_back( serializer_pair( name, stream_serializer<T,D>(item) ) );
         }
 
         /** Attach serializable item
@@ -206,9 +275,9 @@ namespace xmlpp
          * @param item for deserialization
          */
         template<class T>
-        void AttachStreamD(const std::string& name, T* item)
+        void Attach(const std::string& name, T* item)
         {
-            deserializers.insert( deserializer_pair( name, stream_l<D,T>(item) ) );
+            deserializers.insert( deserializer_pair(name, stream_deserializer<T,D>(item)) );
         }
 
         /** Attach deserializable item

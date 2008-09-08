@@ -1,0 +1,30 @@
+<Store>
+    <Car>
+        <Mass>2320.0</Mass>
+        <MaxSpeed>
+            <kmh>205.0</kmh>
+        </MaxSpeed>
+        <Color>Green</Color>
+        <Vendor>Volvo</Vendor>
+        <Model>S80</Model>
+        <Size>
+            <Width>2106</Width>
+            <Length>4851</Length>
+            <Height>1492</Height>
+        </Size>
+    </Car>
+    <Car>
+        <Mass>0.4</Mass>
+        <MaxSpeed>
+            <kmh>0.0</kmh>
+        </MaxSpeed>
+        <Color>Red</Color>
+        <Vendor>Lego</Vendor>
+        <Model>Small_Car</Model>
+        <Size>
+            <Width>4</Width>
+            <Length>5</Length>
+            <Height>3</Height>
+        </Size>
+    </Car>
+</Store>

@@ -1,0 +1,3 @@
+SET ( EXAMPLE_DIR ${PROJECT_SOURCE_DIR}/examples )
+
+ADD_SUBDIRECTORY(SimpleLoading)
