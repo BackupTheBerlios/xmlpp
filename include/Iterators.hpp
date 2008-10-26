@@ -48,7 +48,7 @@ namespace xmlpp
         //template<class T>
         //explicit element_iterator_impl(const T& rhs) : elem(rhs) {}
 
-        bool operator !() const { return elem.GetTiXmlNode() == NULL; }
+        bool operator !() const { return elem.ToTiXmlNode() == NULL; }
     };
 
     /**
@@ -94,7 +94,7 @@ namespace xmlpp
         explicit node_iterator_impl(TiXmlNode* p) : node(p) {}
         //explicit node_iterator_impl(TiXmlNode const* elem) : node(node) {}
 
-        bool operator !() const { return node.GetTiXmlNode() == NULL; }
+        bool operator !() const { return node.ToTiXmlNode() == NULL; }
     };
 }
 

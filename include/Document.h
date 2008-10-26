@@ -20,7 +20,7 @@ namespace xmlpp
         Document();
         Document(const Document& rhs);
         explicit Document(const std::string& source);
-        ~Document();
+        virtual ~Document();
 
         /**
          * Set document source
@@ -28,11 +28,15 @@ namespace xmlpp
          */
         void SetSource(const std::string& source);
 
-        /**
-         * Set document source
+        /** Set document source
          * @param string containing xml filename
          */
         void SetFileSource(const std::string& source, TiXmlEncoding encoding = TIXML_DEFAULT_ENCODING);
+
+        /** Does nothing. Overload this function to implement required
+         *  actions after the document has been loaded.
+         */
+        virtual void OnLoad() {}
 
         /**
          * Get xml document.

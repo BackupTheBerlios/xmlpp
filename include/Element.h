@@ -72,11 +72,16 @@ namespace xmlpp
 
     public:
         // Construct
-        Element() : NodeImpl<TiXmlElement>(NULL) {}
-        Element(const Element& rhs) : NodeImpl<TiXmlElement>(rhs) {}
-        explicit Element(const Node& node) : NodeImpl<TiXmlElement>( node.ToTiXmlNode()->ToElement() ) {}
-        explicit Element(TiXmlElement* pElem) : NodeImpl<TiXmlElement>(pElem) {}
-        explicit Element(const std::string& value) : NodeImpl<TiXmlElement>( new TiXmlElement(value) ) {}
+        Element() :
+            NodeImpl<TiXmlElement>(NULL) {}
+        Element(const Element& rhs) :
+            NodeImpl<TiXmlElement>(rhs) {}
+        explicit Element(const Node& node) :
+            NodeImpl<TiXmlElement>( node.ToTiXmlNode()->ToElement() ) {}
+        explicit Element(TiXmlElement* pElem) :
+            NodeImpl<TiXmlElement>(pElem) {}
+        explicit Element(const std::string& value) :
+            NodeImpl<TiXmlElement>( new TiXmlElement(value) ) {}
 
         /**
          * Text of the element( Same as TiXmlElement::GetText() )
@@ -120,7 +125,7 @@ namespace xmlpp
         template<class T>
         T& ValueAttribute(const std::string& name, T& value) const
         {
-            int res = QueryValueAttribute(name, &value);
+            int res = QueryNode()->QueryValueAttribute(name, &value);
             if ( res == TIXML_WRONG_TYPE ) {
                 throw DOMException("Wrong attribute type");
             }

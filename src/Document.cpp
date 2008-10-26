@@ -32,6 +32,7 @@ void Document::SetSource(const std::string& source)
 {
     pNode = new TiXmlDocument();
     QueryNode()->Parse( source.c_str() );
+    this->OnLoad();
 }
 
 /**
@@ -42,6 +43,7 @@ void Document::SetFileSource(const std::string& source, TiXmlEncoding encoding)
 {
     pNode = new TiXmlDocument();
     QueryNode()->LoadFile(source, encoding);
+    this->OnLoad();
 }
 
 /**

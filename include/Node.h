@@ -66,88 +66,70 @@ namespace xmlpp
          */
         void SetValue(const std::string& newVal);
 
-        /**
-         * One step up the DOM
+        /** One step up the DOM
          * @return iterator addresing parent element
          */
         const_node_iterator Parent() const;
 
-        /**
-         * One step up the DOM
+        /** One step up the DOM
          * @return iterator addresing parent element
          */
         node_iterator Parent();
 
-        /**
-         * Move to next sibling
+        /** Move to next sibling
          * @return node addressing next sibling
          */
         Node NextSibling() const;
 
-        /**
-         * Move to previous sibling
+        /** Move to previous sibling
          * @return node addressing previous sibling
          */
         Node PreviousSibling() const;
 
-        /**
-         * Clear all the children of this node
-         */
+        /** Clear all the children of this node */
         void Clear();
 
-        /**
-         * Get iterator to the first child node
+        /** Get iterator to the first child node
          * @return iterator addressing first child node
          */
         node_iterator FirstChild();
 
-        /**
-         * Get const iterator to the first child node
+        /** Get const iterator to the first child node
          * @return const iterator addressing first child node
          */
         const_node_iterator FirstChild() const;
 
-        /**
-         * Get iterator to the node after last node
+        /** Get iterator to the node after last node
          * @return iterator addressing node after last node
          */
         node_iterator EndChild();
 
-        /**
-         * Get const iterator to the node after last node
+        /** Get const iterator to the node after last node
          * @return const iterator addressing node after last node
          */
         const_node_iterator EndChild() const;
 
-        /**
-         * Get iterator to the first child node
+        /** Get iterator to the first child node
          * @return iterator addressing first child node
          */
         element_iterator FirstChildElement(const char* value = NULL);
 
-        /**
-         * Get const iterator to the first child element
+        /** Get const iterator to the first child element
          * @return const iterator addressing first child element
          */
         const_element_iterator FirstChildElement(const char* value = NULL) const;
 
-        /**
-         * Get iterator to the node after last element
+        /** Get iterator to the node after last element
          * @return iterator addressing node after last element
          */
         element_iterator EndChildElement();
 
-        /**
-         * Get const iterator to the node after last element
+        /** Get const iterator to the node after last element
          * @return const iterator addressing node after last element
          */
         const_element_iterator EndChildElement() const;
 
-        /**
-         * Compare nodes
-         * @value other node
-         * @return true if nodes are equal
-         */
+        /** Compare nodes */
         bool operator == (const Node& rhs) const;
     };
 
@@ -165,6 +147,9 @@ namespace xmlpp
 
         T* QueryNode() { return dynamic_cast<T*>(pNode); }
         T const* QueryNode() const { return dynamic_cast<T const*>(pNode); }
+
+    public:
+        bool Valid() const { return pNode != 0; }
     };
 }
 
