@@ -69,12 +69,12 @@ namespace xmlpp
         /** One step up the DOM
          * @return iterator addresing parent element
          */
-        const_node_iterator Parent() const;
+        const_element_iterator Parent() const;
 
         /** One step up the DOM
          * @return iterator addresing parent element
          */
-        node_iterator Parent();
+        element_iterator Parent();
 
         /** Move to next sibling
          * @return node addressing next sibling

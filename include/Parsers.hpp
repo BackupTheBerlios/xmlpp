@@ -262,11 +262,10 @@ namespace xmlpp
                                   ++i )
             {
                 typename deserializer_map::const_iterator j = deserializers.find( i->Value() );
-                if ( j == deserializers.end() ) {
-                    throw ParserError("Loader for element '" + i->Value() + "' unspecified");
+                if ( j != deserializers.end() ) {
+					j->second(document, *i);                   
+					//throw ParserError("Loader for element '" + i->Value() + "' unspecified");
                 }
-
-                j->second(document, *i);
             }
         }
 

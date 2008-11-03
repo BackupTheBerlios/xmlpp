@@ -4,8 +4,8 @@
 using namespace std;
 using namespace xmlpp;
 
-Document::Document()
-    : NodeImpl<TiXmlDocument>(NULL)
+Document::Document() : 
+	NodeImpl<TiXmlDocument>(NULL)
 {
 }
 

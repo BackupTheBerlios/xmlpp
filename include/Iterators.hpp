@@ -39,6 +39,7 @@ namespace xmlpp
 
     public:
         // Construct
+		element_iterator_impl() {}
         element_iterator_impl(const element_iterator_impl& rhs) : elem(rhs.elem) {}
         element_iterator_impl(const T& elem) : elem(elem) {}
         template<class P>
@@ -49,6 +50,8 @@ namespace xmlpp
         //explicit element_iterator_impl(const T& rhs) : elem(rhs) {}
 
         bool operator !() const { return elem.ToTiXmlNode() == NULL; }
+
+		bool exist() const { return elem.ToTiXmlNode() != NULL; }
     };
 
     /**
@@ -87,6 +90,7 @@ namespace xmlpp
 
     public:
         // Construct
+		node_iterator_impl() {}
         node_iterator_impl(const node_iterator_impl& rhs) : node(rhs.node) {}
         node_iterator_impl(const T& node) : node(node) {}
         template<class P>
@@ -95,6 +99,8 @@ namespace xmlpp
         //explicit node_iterator_impl(TiXmlNode const* elem) : node(node) {}
 
         bool operator !() const { return node.ToTiXmlNode() == NULL; }
+
+		bool exist() const { return node.ToTiXmlNode() != NULL; }
     };
 }
 

@@ -35,20 +35,28 @@ void Node::SetValue(const std::string& newVal)
  * One step up the DOM
  * @return iterator addresing parent element
  */
-const_node_iterator Node::Parent() const
+const_element_iterator Node::Parent() const
 {
     assert(pNode);
-    return const_node_iterator( pNode->Parent() );
+	const TiXmlNode* parent = pNode->Parent(); 
+	if (parent) {
+		return const_element_iterator( const_cast<TiXmlElement*>(parent->ToElement()) );
+	}
+	return const_element_iterator();
 }
 
 /**
  * One step up the DOM
  * @return iterator addresing parent element
  */
-node_iterator Node::Parent()
+element_iterator Node::Parent()
 {
     assert(pNode);
-    return node_iterator( pNode->Parent() );
+	TiXmlNode* parent = pNode->Parent(); 
+	if (parent) {
+		return element_iterator( parent->ToElement() );
+	}
+	return element_iterator();
 }
 
 /**
