@@ -42,7 +42,12 @@ void Document::SetSource(const std::string& source)
 void Document::SetFileSource(const std::string& source, TiXmlEncoding encoding)
 {
     pNode = new TiXmlDocument();
-    QueryNode()->LoadFile(source, encoding);
+    if ( !QueryNode()->LoadFile(source, encoding) ) 
+    {
+        delete pNode;
+        pNode = NULL;
+        return;
+    }
     this->OnLoad();
 }
 

@@ -33,7 +33,7 @@ private:
         istringstream ss( speedNode.Text() );
         ss >> speed;
         if ( speedNode.Value() == "mph" ) {
-            speed *= 1.67;
+            speed *= 1.67f;
         }
         else if ( speedNode.Value() != "kmh" ) {
             throw ParserError("Loader for element '" + speedNode.Value() + "' unspecified");
@@ -59,6 +59,10 @@ public:
 
         std::string col;
         loader.Attach("Color", &col);
+
+        // load
+        loader(d,n);
+
         if ( col == "Red" ) {
             color = RED;
         }
@@ -68,9 +72,6 @@ public:
         else if ( col == "Blue" ) {
             color = BLUE;
         }
-
-        // load
-        loader(d,n);
     }
 
     void PrintInfo() const
