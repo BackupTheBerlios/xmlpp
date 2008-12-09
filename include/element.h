@@ -132,7 +132,7 @@ public:
     template<class T>
     T& get_attribute_value(const std::string& name, T& value) const
     {
-        int res = QueryNode()->QueryValueAttribute(name, &value);
+        int res = query_node()->QueryValueAttribute(name, &value);
         if ( res == TIXML_WRONG_TYPE ) {
             throw dom_error("Wrong attribute type");
         }

@@ -40,7 +40,7 @@ public:
      * @return value of the attribute
      */
     template<typename value_t>
-    value_t& get_value(value_t& out) const
+    value_t& get_value(value_t& outValue) const
     {
         std::stringstream sstream( get_value() );
         sstream >> outValue;
