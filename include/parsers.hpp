@@ -17,7 +17,7 @@ class parser_error :
     public std::runtime_error
 {
 public:
-    parser_error() : 
+    parser_error() :
         std::runtime_error("Error during parsing") {}
     parser_error(const std::string& err) :
         std::runtime_error(err) {}
@@ -62,21 +62,9 @@ public:
     {
         std::istringstream sstr;
         sstr << *item;
-        element(n).SetText( sstr.str() );
+        element(n).set_text( sstr.str() );
     }
 };
-
-/** Create serializer for container serialization
- * @param container - container to serialize
- * @return serializer for container serialization
- */
-template<typename CT, typename D>
-boost::function<void (D&, node&)> container_s(const CT& container)
-{
-    return for_each( container.begin(),
-                     container.end(),
-                     bind(&Serializable<D>::Save, _1, _2, _3) );
-}
 
 /** Create serializer for container serialization
  * @param container - container to serialize
@@ -124,8 +112,8 @@ public:
     {
         for(size_t i = 0; i < serializers.size(); ++i)
         {
-            Element nameElem(serializers[i].first);
-            Element valueElem;
+            element nameElem(serializers[i].first);
+            element valueElem;
 
             serializers[i].Save(document, valueElem);
 
@@ -143,7 +131,7 @@ public:
         serializers.push_back( serializer_pair(name, s) );
     }
 
-    /** Attach item using stream serializer. 
+    /** Attach item using stream serializer.
      * TODO: Write concept check
      * @param name of the element to serialize
      * @param item for serialization
@@ -178,7 +166,7 @@ public:
         {
             typename deserializer_map::const_iterator j = deserializers.find( i->get_value() );
             if ( j != deserializers.end() ) {
-				j->second(document, *i);                   
+				j->second(document, *i);
 				//throw ParserError("Loader for element '" + i->Value() + "' unspecified");
             }
         }

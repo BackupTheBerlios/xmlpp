@@ -1,4 +1,4 @@
-#include "Element.h"
+#include "element.h"
 
 using namespace xmlpp;
 
@@ -17,7 +17,7 @@ void node::set_value(const std::string& newVal)
 const_element_iterator node::get_parent() const
 {
     assert(tixmlNode);
-	const TiXmlNode* parent = tixmlNode->Parent(); 
+	const TiXmlNode* parent = tixmlNode->Parent();
 	if (parent) {
 		return const_element_iterator( const_cast<TiXmlElement*>( tixmlNode->ToElement() ) );
 	}
@@ -27,7 +27,7 @@ const_element_iterator node::get_parent() const
 element_iterator node::get_parent()
 {
     assert(tixmlNode);
-	TiXmlNode* parent = tixmlNode->Parent(); 
+	TiXmlNode* parent = tixmlNode->Parent();
 	if (parent) {
 		return element_iterator( tixmlNode->ToElement() );
 	}
