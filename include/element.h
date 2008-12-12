@@ -75,10 +75,17 @@ public:
         node_impl<TiXmlElement>(NULL) {}
     element(const element& rhs) :
         node_impl<TiXmlElement>(rhs) {}
+
+    /** Try interpret node as element. Could throw dom_error */
     explicit element(const node& elementNode) :
-        node_impl<TiXmlElement>( const_cast<node&>(elementNode).get_tixml_node()->ToElement() ) {}
+        node_impl<TiXmlElement>( const_cast<node&>(elementNode).get_tixml_node()->ToElement() ) 
+    {
+        if ( !tixmlNode ) throw dom_error("Node is not an element");
+    }
+
     explicit element(TiXmlElement* _tixmlElement) :
-        node_impl<TiXmlElement>(_tixmlElement) { assert(_tixmlElement); }
+        node_impl<TiXmlElement>(_tixmlElement) {}
+
     explicit element(const std::string& value) :
         node_impl<TiXmlElement>( new TiXmlElement(value) ) {}
 

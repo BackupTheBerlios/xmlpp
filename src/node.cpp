@@ -29,7 +29,7 @@ element_iterator node::get_parent()
     assert(tixmlNode);
 	TiXmlNode* parent = tixmlNode->Parent();
 	if (parent) {
-		return element_iterator( tixmlNode->ToElement() );
+		return element_iterator( parent->ToElement() );
 	}
 	return element_iterator();
 }

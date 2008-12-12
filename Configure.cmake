@@ -4,7 +4,7 @@ SET (CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/CMakeModules;${CMAKE_MODULE_PATH}"
 #INCLUDE (Doxy)
 
 # standart
-#INCLUDE (StandartIncludes)
+INCLUDE (StandartIncludes)
 
 # try to find 3rdParty directory
 #INCLUDE (Find3rdParty)

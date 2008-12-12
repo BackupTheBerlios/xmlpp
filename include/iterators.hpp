@@ -44,7 +44,6 @@ private:
 
     T& dereference() const 
     { 
-        assert( element.get_tixml_element() );
         return const_cast<element_type&>(element); 
     }
 
@@ -107,7 +106,6 @@ private:
 
     T& dereference() const 
     { 
-        assert( node.get_tixml_node() ); 
         return const_cast<node_type&>(node); 
     }
 
