@@ -37,7 +37,7 @@ public:
         item(_item) {}
 
     /** serialize item into the stream */
-    void operator() (const D& document, const node& n) const
+    void operator() (const D& /*document*/, const node& n) const
     {
         std::istringstream sstr( element(n).get_text() );
         sstr >> *item;
@@ -58,7 +58,7 @@ public:
         item(_item) {}
 
     /** serialize item into the stream */
-    void operator() (D& document, node& n) const
+    void operator() (D& /*document*/, node& n) const
     {
         std::istringstream sstr;
         sstr << *item;

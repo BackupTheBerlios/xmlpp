@@ -55,83 +55,66 @@ const_element_iterator document::first_child_element(const std::string& value) c
     return const_element_iterator(pElem);
 }
 
-/*
-DeviceEffect Graphics::LoadDeviceEffect( const document& doc,
-                                         const ticpp::Element* xmlElem )
-{
-
-}
-
-LodEffect Graphics::LoadLodEffect( const document& doc,
-                                   const ticpp::Element* xmlElem )
-{
-
-}
-*/
-
 ////////////////////////////////////////////////////////////////////////
 
 void xmlpp::replace_node( node& what,
                           node& with )
-{                         /*
-    what.pNode = what.Parent()->pNode->ReplaceChild(what.pNode, *with.pNode);
+{                         
+    assert( what.get_parent().exist() && with.get_tixml_node() );
 
-    if (!what.pNode) {
+    TiXmlNode* parentNode = what.get_parent()->get_tixml_node();
+    what.set_tixml_node( parentNode->ReplaceChild( what.get_tixml_node(), *with.get_tixml_node() ) );
+
+    if ( !what.get_tixml_node() ) {
         throw dom_error("Error replacing xml node");
-    }
-
-    return what;            */
+    }           
 }
 
 void xmlpp::insert_before_node( node& beforeThis,
                                 node& insertNode )
-{                     /*
-    node.pNode = beforeThis.Parent()->pNode->InsertBeforeChild(beforeThis.pNode, *node.pNode);
+{  
+    assert( beforeThis.get_parent().exist() && insertNode.get_tixml_node() );
 
-    if (!node.tixmlNode) {
+    TiXmlNode* parentNode = beforeThis.get_parent()->get_tixml_node();
+    insertNode.set_tixml_node( parentNode->InsertBeforeChild( beforeThis.get_tixml_node(), *insertNode.get_tixml_node() ) );
+
+    if ( !insertNode.get_tixml_node() ) {
         throw dom_error("Error inserting before xml node");
     }
-
-    return node;        */
 }
 
-/**
- * Insert node after specified node.
- * @param after this node will be inserted node
- * @param node to insert
- * @return inserted node
- */
 void xmlpp::insert_after_node( node& afterThis,
                                node& insertNode )
 {
-    /*
-    node.pNode = afterThis.Parent()->pNode->InsertAfterChild(afterThis.pNode, *node.pNode);
+    assert( afterThis.get_parent().exist() && insertNode.get_tixml_node() );
 
-    if (!node.pNode ) {
-        throw DOMException("Error inserting after xml node");
+    TiXmlNode* parentNode = afterThis.get_parent()->get_tixml_node();
+    afterThis.set_tixml_node( parentNode->InsertAfterChild( afterThis.get_tixml_node(), *insertNode.get_tixml_node() ) );
+
+    if ( !afterThis.get_tixml_node() ) {
+        throw dom_error("Error inserting after xml node");
     }
-
-    return node;*/
 }
 
 void xmlpp::add_child( node& parent,
                        node& child )
-{                 /*
-    assert(parent.pNode);
-    child.pNode = parent.pNode->LinkEndChild(child.pNode);
+{        
+    assert( parent.get_tixml_node() );
 
-    if (!child.pNode ) {
-        throw DOMException("Error adding child node");
-    }
+    child.set_tixml_node( parent.get_tixml_node()->LinkEndChild( child.get_tixml_node() ) );
 
-    return child;   */
+    if ( !child.get_tixml_node() ) {
+        throw dom_error("Error adding child node");
+    } 
 }
 
 void xmlpp::remove_node( node& what )
-{              /*
-    bool res = what.Parent()->pNode->RemoveChild(what.pNode);
+{
+    assert( what.get_parent().exist() );
+
+    bool res = what.get_parent()->get_tixml_node()->RemoveChild( what.get_tixml_node() );
 
     if (!res) {
-        throw DOMException("Error removing xml node");
-    }            */
+        throw dom_error("Error removing xml node");
+    }            
 }

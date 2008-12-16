@@ -60,7 +60,7 @@ public:
         loader.attach("Color", &col);
 
         // load
-        loader(d,n);
+        loader(d, n);
 
         if ( col == "Red" ) {
             color = RED;
