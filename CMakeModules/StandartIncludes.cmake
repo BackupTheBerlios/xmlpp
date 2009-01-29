@@ -1,2 +1,0 @@
-INCLUDE (BuildFlags)
-INCLUDE (OutputPaths)

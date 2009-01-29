@@ -1,9 +1,0 @@
-# Required Vars:
-# ${TARGET_NAME}
-
-SET_TARGET_PROPERTIES (${TARGET_NAME} PROPERTIES DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX})
-IF (MSVC)
-	# Это чтобы файлы клались не в поддерикторию с именем типа сборки (release, debug, etc).
-	SET_TARGET_PROPERTIES (${TARGET_NAME} PROPERTIES PREFIX "../")
-	SET_TARGET_PROPERTIES (${TARGET_NAME} PROPERTIES IMPORT_PREFIX "../")
-ENDIF (MSVC)
