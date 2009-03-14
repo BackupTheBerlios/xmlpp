@@ -42,9 +42,9 @@ public:
 
     /** Set document source
      * TODO: Split file errors & dom errors
-     * @param fileName - name of the xml formatted file
+     * @param _fileName - name of the xml formatted file
      */
-    void set_file_source(const std::string& fileName, TiXmlEncoding encoding = TIXML_DEFAULT_ENCODING);
+    void set_file_source(const std::string& _fileName, TiXmlEncoding encoding = TIXML_DEFAULT_ENCODING);
 
     /** Does nothing. Overload this function to implement required
      *  actions after the document has been loaded.
@@ -88,7 +88,7 @@ public:
      * Get iterator to the node after last element
      * @return iterator addressing node after last element
      */
-    element_iterator end_child_element()  { return element_iterator(NULL); }
+    element_iterator end_child_element() { return element_iterator(NULL); }
 
     /**
      * Get const iterator to the node after last element
@@ -96,7 +96,11 @@ public:
      */
     const_element_iterator end_child_element() const { return const_element_iterator(NULL); }
 
+    /** Get document file name if it has been loaded from the file. Otherwise return emptry string */
+    std::string get_file_name() const { return fileName; }
+
 private:
+    std::string fileName;
     boost::shared_ptr<TiXmlDocument> tixmlDocument;
 };
 

@@ -31,13 +31,13 @@ void document::set_source(const std::string& source)
     this->on_load();
 }
 
-void document::set_file_source(const std::string& fileName, TiXmlEncoding encoding)
+void document::set_file_source(const std::string& _fileName, TiXmlEncoding encoding)
 {
     tixmlDocument.reset( new TiXmlDocument() );
-    if ( !tixmlDocument->LoadFile(fileName, encoding) ) 
-    {
+    if ( !tixmlDocument->LoadFile(_fileName, encoding) ) {
         throw io_error( string("Loading error: ") + tixmlDocument->ErrorDesc() );
     }
+    fileName = fileName;
     this->on_load();
 }
 
