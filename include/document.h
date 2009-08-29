@@ -32,7 +32,6 @@ class document
 public:
     document();
     document(const document& rhs);
-    explicit document(const std::string& source);
     virtual ~document();
 
     /** Set document source
@@ -97,7 +96,7 @@ public:
     const_element_iterator end_child_element() const { return const_element_iterator(NULL); }
 
     /** Get document file name if it has been loaded from the file. Otherwise return emptry string */
-    std::string get_file_name() const { return fileName; }
+    const std::string& get_file_name() const { return fileName; }
 
 private:
     std::string fileName;

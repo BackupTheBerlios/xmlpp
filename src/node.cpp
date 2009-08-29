@@ -19,7 +19,7 @@ const_element_iterator node::get_parent() const
     assert(tixmlNode);
 	const TiXmlNode* parent = tixmlNode->Parent();
 	if (parent) {
-		return const_element_iterator( const_cast<TiXmlElement*>( tixmlNode->ToElement() ) );
+		return const_element_iterator( const_cast<TiXmlElement*>( parent->ToElement() ) );
 	}
 	return const_element_iterator();
 }

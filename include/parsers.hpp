@@ -96,7 +96,8 @@ stream_deserializer<T,D> stream_d(T* item)
 
 /** Generated saver */
 template<typename D>
-class generic_saver
+class generic_saver :
+    public std::binary_function<D&, node&, void>
 {
 private:
     typedef boost::function<void (D&, node&)>   serializer;
@@ -146,7 +147,8 @@ public:
 
 /** Generated loader */
 template<typename D>
-class generic_loader
+class generic_loader :
+    public std::binary_function<const D&, const node&, void>
 {
 private:
     typedef boost::function<void (const D&, const node&)> deserializer;

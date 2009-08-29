@@ -64,7 +64,7 @@ public:
     explicit element_iterator_impl(TiXmlElement* _tixmlElement) : 
         element(_tixmlElement) {}
 
-    bool operator !() const { return element.get_tixml_element() == NULL; }
+    operator bool () const { return element.get_tixml_element() != NULL; }
 
 	bool exist() const { return element.get_tixml_element() != NULL; }
 };
@@ -130,7 +130,7 @@ public:
     explicit node_iterator_impl(TiXmlNode* _tixmlNode) : 
         node(_tixmlNode) {}
 
-    bool operator !() const { return node.get_tixml_node() == NULL; }
+    operator bool () const { return node.get_tixml_element() != NULL; }
 
 	bool exist() const { return node.get_tixml_node() != NULL; }
 };

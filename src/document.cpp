@@ -13,11 +13,6 @@ document::document(const document& rhs) :
 {
 }
 
-document::document(const std::string& source)
-{
-    set_source(source);
-}
-
 document::~document()
 {
 }
@@ -37,7 +32,7 @@ void document::set_file_source(const std::string& _fileName, TiXmlEncoding encod
     if ( !tixmlDocument->LoadFile(_fileName, encoding) ) {
         throw io_error( string("Loading error: ") + tixmlDocument->ErrorDesc() );
     }
-    fileName = fileName;
+    fileName = _fileName;
     this->on_load();
 }
 
