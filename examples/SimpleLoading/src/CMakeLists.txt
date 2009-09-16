@@ -3,10 +3,6 @@ SET (TARGET_NAME SimpleLoading)
 # sources
 AUX_SOURCE_DIRECTORY(. TARGET_SOURCES)
 
-ADD_DEFINITIONS (
-	-Wall
-)
-
 # install
 SET (INSTALL_BINDIR  ${EXAMPLE_DIR}/bin)
 

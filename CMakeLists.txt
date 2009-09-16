@@ -9,6 +9,7 @@ INCLUDE(Configure.cmake)
 ADD_SUBDIRECTORY (src)
 
 # examples
-ADD_SUBDIRECTORY (examples)
-
+IF (BUILD_EXAMPLES)
+	ADD_SUBDIRECTORY (examples)
+ENDIF (BUILD_EXAMPLES)
 

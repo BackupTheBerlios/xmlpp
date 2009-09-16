@@ -9,6 +9,10 @@ INCLUDE (StandartIncludes)
 # try to find 3rdParty directory
 #INCLUDE (Find3rdParty)
 
+# examples
+OPTION (BUILD_EXAMPLES "Set to ON to build examples. ")
+MESSAGE ("Build examples: " ${BUILD_EXAMPLES})
+
 # libraries 
 INCLUDE (FindNecessaryLibraries.cmake)
 

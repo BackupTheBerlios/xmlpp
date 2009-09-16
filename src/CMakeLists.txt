@@ -1,19 +1,25 @@
 SET (HEADER_PATH ${PROJECT_SOURCE_DIR}/include)
 SET (TARGET_HEADERS
-	${HEADER_PATH}/tinyxml.h
-	${HEADER_PATH}/tinystr.h
-	${HEADER_PATH}/node.h
+	${HEADER_PATH}/attribute.h
+	${HEADER_PATH}/document.h
 	${HEADER_PATH}/element.h
 	${HEADER_PATH}/iterators.hpp
-	${HEADER_PATH}/document.h
-	${HEADER_PATH}/attribute.h
+	${HEADER_PATH}/node.h
 	${HEADER_PATH}/parsers.hpp
+	${HEADER_PATH}/tinyxml.h
 )
 
-AUX_SOURCE_DIRECTORY(. TARGET_SOURCES)
+SET (TARGET_SOURCES
+	attribute.cpp
+	document.cpp
+	element.cpp
+	node.cpp
+	tinyxml.cpp
+	tinyxmlerror.cpp
+	tinyxmlparser.cpp
+)
 
 ADD_DEFINITIONS (
-	-Wall
 	-DTIXML_USE_STL
 )
 
