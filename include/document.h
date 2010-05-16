@@ -27,7 +27,8 @@ public:
 /**
  * Base class for parsing xml documents.
  */
-class document
+class document :
+    public node_impl<TiXmlDocument>
 {
 public:
     document();
@@ -51,25 +52,17 @@ public:
     virtual void on_load() {}
 
     /** Get tiny xml document. Use with care. */
-    TiXmlDocument* get_tixml_document() { return tixmlDocument.get(); }
+    TiXmlDocument* get_tixml_document() { return query_node(); }
 
     /** Get iterator to the first child node
      * @return iterator addressing first child node
      */
-    element_iterator first_child_element()
-    {
-        assert(tixmlDocument);
-        return element_iterator( tixmlDocument->FirstChildElement() );
-    }
+    element_iterator first_child_element();
 
     /** Get const iterator to the first child element
      * @return const iterator addressing first child element
      */
-    const_element_iterator first_child_element() const
-    {
-        assert(tixmlDocument);
-        return const_element_iterator( tixmlDocument->FirstChildElement() );
-    }
+    const_element_iterator first_child_element() const;
 
     /** Get iterator to the first child element with the specified name
      * @param name - name of the element
@@ -100,41 +93,7 @@ public:
 
 private:
     std::string fileName;
-    boost::shared_ptr<TiXmlDocument> tixmlDocument;
 };
-
-/** Replace specified node with new node. Could throw dom_error.
- * @param what - node for replacement
- * @param with - new node to replace old node
- */
-void replace_node( node& what,
-                   node& with );
-
-/** insert node before specified node. Could throw dom_error.
- * @param beforeThis - before this node will be inserted node
- * @param node - node to insert
- */
-void insert_before_node( node& beforeThis,
-                         node& insertNode );
-
-/** Insert node after specified node. Could throw dom_error.
- * @param afterThis - after this node will be inserted node
- * @param node - node to insert
- */
-void insert_after_node( node& afterThis,
-                        node& insertNode );
-
-/** Make node child of another node. Could throw dom_error.
- * @param parent - parent node
- * @param child - new child node
- */
-void add_child( node& parent,
-                node& child );
-
-/** Remove specified node. Could throw dom_error.
- * @param what - node to remove
- */
-void remove_node( node& what );
 
 } // namespace xmlpp
 

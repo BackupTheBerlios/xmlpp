@@ -13,6 +13,9 @@ INCLUDE (StandartIncludes)
 OPTION (BUILD_EXAMPLES "Set to ON to build examples. ")
 MESSAGE ("Build examples: " ${BUILD_EXAMPLES})
 
+OPTION (BUILD_TESTS "Set to ON to build tests. ")
+MESSAGE ("Build tests: " ${BUILD_TESTS})
+
 # libraries 
 INCLUDE (FindNecessaryLibraries.cmake)
 

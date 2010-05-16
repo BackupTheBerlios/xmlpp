@@ -34,6 +34,12 @@ public:
      */
     std::string get_value() const;
 
+    /** Set attribute name */
+    void set_name(const std::string& name) const;
+
+    /** Set attribute value */
+    void set_value(const std::string& value) const;
+
     /**
      * Get attrbiute depending on the type. Assert if fails
      * @param output value
@@ -46,6 +52,9 @@ public:
         sstream >> outValue;
         return outValue;
     }
+
+    /** Compare nodes */
+    bool operator == (const attribute& rhs) const { return tixmlAttribute == rhs.tixmlAttribute; }
 };
 
 } // namepsace xmlpp

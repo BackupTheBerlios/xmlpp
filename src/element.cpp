@@ -1,4 +1,6 @@
 #include "element.h"
+#include <algorithm>
+#include <boost/bind.hpp>
 
 using namespace xmlpp;
 
@@ -43,6 +45,12 @@ bool element::has_attribute(const std::string& name) const
     return result != NULL;
 }
 
+void element::set_attribute(const std::string& name, const std::string& text)
+{
+    assert(tixmlNode);
+    query_node()->SetAttribute(name, text);
+}
+
 std::string element::get_attribute(const std::string& name) const
 {
     assert(tixmlNode);
@@ -63,6 +71,20 @@ element::const_attribute_iterator element::first_attribute() const
 {
     assert(tixmlNode);
     return const_attribute_iterator( const_cast<TiXmlAttribute*>( query_node()->FirstAttribute() ) );
+}
+
+element::attribute_iterator element::first_attribute(const std::string& name)
+{
+    return std::find_if( first_attribute(),
+                         end_attribute(),
+                         boost::bind(&attribute::get_name, _1) == name );
+}
+
+element::const_attribute_iterator element::first_attribute(const std::string& name) const
+{
+    return std::find_if( first_attribute(),
+                         end_attribute(),
+                         boost::bind(&attribute::get_name, _1) == name );
 }
 
 element::attribute_iterator element::end_attribute()

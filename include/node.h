@@ -3,7 +3,6 @@
 
 #include "iterators.hpp"
 #include <stdexcept>
-#include <boost/static_assert.hpp>
 
 namespace xmlpp {
 
@@ -39,9 +38,6 @@ typedef element_iterator_impl<element const>    const_element_iterator;
  */
 class node
 {
-protected:
-    TiXmlNode* tixmlNode;
-
 public:
     /** Construct empty node(tixmlNode == NULL).
      * TODO: Think about design. May be it is better to construct empty but existing TiXmlNode
@@ -140,6 +136,9 @@ public:
 
     /** Compare nodes */
     bool operator == (const node& rhs) const;
+
+protected:
+    TiXmlNode* tixmlNode;
 };
 
 /**
@@ -163,6 +162,39 @@ protected:
     T* query_node() { return dynamic_cast<T*>(tixmlNode); }
     T const* query_node() const { return dynamic_cast<T const*>(tixmlNode); }
 };
+
+/** Replace specified node with new node. Could throw dom_error.
+ * @param what - node for replacement
+ * @param with - new node to replace old node
+ */
+void replace_node( node& what,
+                   node& with );
+
+/** insert node before specified node. Could throw dom_error.
+ * @param beforeThis - before this node will be inserted node
+ * @param node - node to insert
+ */
+void insert_before_node( node& beforeThis,
+                         node& insertNode );
+
+/** Insert node after specified node. Could throw dom_error.
+ * @param afterThis - after this node will be inserted node
+ * @param node - node to insert
+ */
+void insert_after_node( node& afterThis,
+                        node& insertNode );
+
+/** Make node child of another node. Could throw dom_error.
+ * @param parent - parent node
+ * @param child - new child node
+ */
+void add_child( node& parent,
+                node& child );
+
+/** Remove specified node. Could throw dom_error.
+ * @param what - node to remove
+ */
+void remove_node( node& what );
 
 } // namespace xmlpp
 

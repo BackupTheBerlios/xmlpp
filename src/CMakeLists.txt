@@ -9,6 +9,18 @@ SET (TARGET_HEADERS
 	${HEADER_PATH}/tinyxml.h
 )
 
+SET (TARGET_SERIALIZATION_HEADERS
+	${HEADER_PATH}/serialization/attribute_serializer.hpp
+	${HEADER_PATH}/serialization/container_serializer.hpp
+	${HEADER_PATH}/serialization/generic_serializer.hpp
+	${HEADER_PATH}/serialization/name_value_pair.hpp
+	${HEADER_PATH}/serialization/serialization.hpp
+	${HEADER_PATH}/serialization/text_serializer.hpp
+)
+
+SOURCE_GROUP( headers FILES 				${TARGET_HEADERS} )
+SOURCE_GROUP( headers\\serialization FILES 	${TARGET_SERIALIZATION_HEADERS} )
+
 SET (TARGET_SOURCES
 	attribute.cpp
 	document.cpp
@@ -19,6 +31,14 @@ SET (TARGET_SOURCES
 	tinyxmlparser.cpp
 )
 
+SOURCE_GROUP( sources FILES	 ${TARGET_SOURCES} )
+
+SET (TARGET_SOURCES
+	${TARGET_HEADERS}
+	${TARGET_SOURCES}
+	${TARGET_SERIALIZATION_HEADERS}
+)
+	
 ADD_DEFINITIONS (
 	-DTIXML_USE_STL
 )
@@ -29,7 +49,7 @@ IF (MSVC)
 	ADD_DEFINITIONS (-D_SCL_SECURE_NO_WARNINGS)
 ENDIF(MSVC)
 
-ADD_LIBRARY( ${TARGET_NAME} STATIC ${TARGET_HEADERS} ${TARGET_SOURCES} ${TARGET_OPTIONS} )
+ADD_LIBRARY( ${TARGET_NAME} STATIC ${TARGET_SOURCES} ${TARGET_OPTIONS} )
 
 # install
 INSTALL(
@@ -43,3 +63,9 @@ INSTALL(
     FILES        ${TARGET_HEADERS}
     DESTINATION  ${INSTALL_INCDIR}/xml++
 )
+
+INSTALL (
+    FILES       ${TARGET_SERIALIZATION_HEADERS}
+    DESTINATION ${INSTALL_INCDIR}/xml++/serialization
+)
+
