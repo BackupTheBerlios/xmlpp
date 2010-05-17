@@ -70,23 +70,15 @@ public:
 
 public:
     // Construct
-    element() :
-        node_impl<TiXmlElement>(NULL) {}
-    element(const element& rhs) :
-        node_impl<TiXmlElement>(rhs) {}
+    element();
+    element(const element& rhs);
+    explicit element(TiXmlElement* _tixmlElement);
+
+    /** Create element with specified value */
+    explicit element(const std::string& value);
 
     /** Try interpret node as element. Could throw dom_error */
-    explicit element(const node& elementNode) :
-        node_impl<TiXmlElement>( const_cast<node&>(elementNode).get_tixml_node()->ToElement() ) 
-    {
-        if ( !tixmlNode ) throw dom_error("Node is not an element");
-    }
-
-    explicit element(TiXmlElement* _tixmlElement) :
-        node_impl<TiXmlElement>(_tixmlElement) {}
-
-    explicit element(const std::string& value) :
-        node_impl<TiXmlElement>( new TiXmlElement(value) ) {}
+    explicit element(const node& elementNode);
 
     /** Get tinyxml element of this element */
     TiXmlElement* get_tixml_element() { return query_node(); }

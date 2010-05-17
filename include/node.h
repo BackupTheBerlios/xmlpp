@@ -42,12 +42,9 @@ public:
     /** Construct empty node(tixmlNode == NULL).
      * TODO: Think about design. May be it is better to construct empty but existing TiXmlNode
      */
-    node() : 
-        tixmlNode(NULL) {}
-    node(const node& rhs) : 
-        tixmlNode(rhs.tixmlNode) {}
-    explicit node(TiXmlNode* _tixmlNode) : 
-        tixmlNode(_tixmlNode) {}
+    node();
+    node(const node& rhs);
+    explicit node(TiXmlNode* _tixmlNode);
 
     /** Get TiXmlNode
      * @return TiXmlNode it wraps

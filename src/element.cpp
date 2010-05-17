@@ -4,10 +4,39 @@
 
 using namespace xmlpp;
 
+element::element() :
+    node_impl<TiXmlElement>(0) 
+{}
+
+element::element(const element& rhs) :
+    node_impl<TiXmlElement>(rhs) 
+{}
+
+element::element(TiXmlElement* _tixmlElement) :
+    node_impl<TiXmlElement>(_tixmlElement)
+{}
+
+element::element(const std::string& value) :
+    node_impl<TiXmlElement>( new TiXmlElement(value) )
+{}
+
+element::element(const node& elementNode) :
+    node_impl<TiXmlElement>( const_cast<node&>(elementNode).get_tixml_node()->ToElement() ) 
+{
+    if ( !tixmlNode ) {
+        throw dom_error("Can't convert node to element");
+    }
+}
+
 std::string element::get_text() const
 {
     assert(tixmlNode);
-    return query_node()->GetText();
+    const char* text = query_node()->GetText();
+    if (text) {
+        return std::string(text);
+    }
+
+    return "";
 }
 
 void element::set_text(const std::string text)
@@ -35,6 +64,12 @@ void element::set_text(const std::string text)
         else {
             ++i;
         }
+    }
+
+    if ( i == end_child() ) 
+    {
+        TiXmlText* textNode = new TiXmlText(text);
+        tixmlNode->LinkEndChild(textNode);
     }
 }
 

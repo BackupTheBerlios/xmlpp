@@ -4,7 +4,8 @@
 using namespace std;
 using namespace xmlpp;
 
-document::document() 
+document::document()  :
+    node_impl<TiXmlDocument>(new TiXmlDocument)
 {
 }
 
@@ -20,7 +21,6 @@ document::~document()
 
 void document::set_source(const std::string& source)
 {
-    tixmlNode =new TiXmlDocument();
     if ( !query_node()->Parse( source.c_str() ) ) {
         throw dom_error( string("Parse error: ") + query_node()->ErrorDesc() );
     }
@@ -29,7 +29,6 @@ void document::set_source(const std::string& source)
 
 void document::set_file_source(const std::string& _fileName, TiXmlEncoding encoding)
 {
-    tixmlNode = new TiXmlDocument();
     if ( !query_node()->LoadFile(_fileName, encoding) ) {
         throw io_error( string("Loading error: ") + query_node()->ErrorDesc() );
     }

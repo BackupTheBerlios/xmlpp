@@ -2,6 +2,19 @@
 
 namespace xmlpp {
 
+node::node() 
+{
+}
+
+node::node(const node& rhs) : 
+    tixmlNode(rhs.tixmlNode) 
+{}
+
+node::node(TiXmlNode* _tixmlNode) : 
+    tixmlNode(_tixmlNode)
+{
+}
+
 std::string node::get_value() const
 {
     assert(tixmlNode);

@@ -2,7 +2,7 @@
 #define XMLPP_SERIALIZATION_CONTAINER_SERIALIZER_HPP
 
 #include "generic_serializer.hpp"
-#include "text_serializer.hpp"
+#include "element_serializer.hpp"
 
 namespace xmlpp {
 
@@ -55,9 +55,9 @@ private:
 };
 
 template<typename Container>
-container_serializer<Container, typename Container::reference> as_element_set(const std::string& name, Container& items)
+container_serializer<Container, element_serializer<typename Container::value_type> > as_element_set(const std::string& name, Container& items)
 {
-    return container_serializer<Container, typename Container::reference>(name, items);
+    return container_serializer<Container, element_serializer<typename Container::value_type> >(name, items);
 }
 
 template<typename Container>
