@@ -4,6 +4,7 @@
 #include "../document.h"
 #include "attribute_serializer.hpp"
 #include "container_serializer.hpp"
+#include "custom_serializer.hpp"
 #include "element_serializer.hpp"
 #include "generic_serializer.hpp"
 

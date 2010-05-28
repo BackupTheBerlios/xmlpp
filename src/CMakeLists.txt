@@ -12,6 +12,7 @@ SET (TARGET_HEADERS
 SET (TARGET_SERIALIZATION_HEADERS
 	${HEADER_PATH}/serialization/attribute_serializer.hpp
 	${HEADER_PATH}/serialization/container_serializer.hpp
+	${HEADER_PATH}/serialization/custom_serializer.hpp
 	${HEADER_PATH}/serialization/element_serializer.hpp
 	${HEADER_PATH}/serialization/generic_serializer.hpp
 	${HEADER_PATH}/serialization/name_value_pair.hpp

@@ -1,7 +1,7 @@
 #ifndef XMLPP_SERIALIZATION_NAME_VALUE_PAIR_HPP
 #define XMLPP_SERIALIZATION_NAME_VALUE_PAIR_HPP
 
-#include "node.h"
+#include "../node.h"
 
 namespace xmlpp  {
 
@@ -17,6 +17,9 @@ struct nvp_list_end {};
 template<typename S, typename Rest>
 struct nvp_list
 {
+    typedef S                                               serializer_type;
+    typedef typename serializer_type::xmlpp_holder_type     xmlpp_holder_type;
+
     name_value_pair<S>  nvp;
     Rest                rest;
 
@@ -66,8 +69,8 @@ name_value_pair<Serializer> make_nvp(const std::string& name, const Serializer& 
 }
 
 template<typename S0, typename S1, typename Rest>
-nvp_list< S0, nvp_list<S1, Rest> > operator & (const name_value_pair<S0>&   nvp,
-                                               const nvp_list<S1, Rest>&    nvpl)
+nvp_list< S0, nvp_list<S1, Rest> > operator & (const nvp_list<S1, Rest>&    nvpl,
+                                               const name_value_pair<S0>&   nvp)
 {
     return nvp_list< S0, nvp_list<S1, Rest> >(nvp, nvpl);
 }
@@ -76,7 +79,7 @@ template<typename S0, typename S1>
 nvp_list< S0, nvp_list<S1, nvp_list_end> > operator & (const name_value_pair<S0>& nvp0,
                                                        const name_value_pair<S1>& nvp1)
 {
-    return nvp0 & nvp_list<S1, nvp_list_end>( nvp1, nvp_list_end() );
+    return nvp_list<S1, nvp_list_end>( nvp1, nvp_list_end() ) & nvp0;
 }
 
 // unroll nvp list as generic serializer and load

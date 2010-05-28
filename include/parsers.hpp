@@ -1,5 +1,5 @@
-#ifndef XMLPP_SERIALIZATION_HPP
-#define XMLPP_SERIALIZATION_HPP
+#ifndef XMLPP_PARSERS_HPP
+#define XMLPP_PARSERS_HPP
 
 #include <stdexcept>
 #include <iostream>
@@ -198,4 +198,4 @@ public:
 
 } // namespace xmlpp
 
-#endif // XMLPP_SERIALIZATION_HPP
+#endif // XMLPP_PARSERS_HPP
