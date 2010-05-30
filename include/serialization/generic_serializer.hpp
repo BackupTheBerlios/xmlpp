@@ -26,6 +26,31 @@ enum serialization_state
         else save(d, n);\
     }
 
+template<typename Serializer, typename Holder>
+struct generic_holder;
+
+template<typename Serializer>
+struct generic_holder< name_value_pair<Serializer>, xmlpp::attribute >
+{
+    attribute operator () (const name_value_pair<Serializer>& nvp, node& parent)
+    {
+        element elem(parent);
+        elem.set_attribute(nvp.name, "");
+        return *elem.first_attribute(nvp.name);
+    }
+};
+
+template<typename Serializer>
+struct generic_holder< name_value_pair<Serializer>, xmlpp::element >
+{
+    element operator () (const name_value_pair<Serializer>& nvp, node& parent)
+    {
+        element child(nvp.name);
+        add_child(parent, child);
+        return child;
+    }
+};
+
 /** Generated loader & saver */
 template<typename Document>
 class generic_serializer
@@ -34,27 +59,32 @@ public:
     typedef element xmlpp_holder_type;
 
 private:
-    template<typename Node>
+    template<typename Holder>
     class serializer
     {
     public:
-        virtual void save(Document&, Node&) const = 0;
-        virtual void load(const Document&, const Node&) = 0;
+        virtual void save(Document&, xmlpp::node&) const = 0;
+        virtual void load(const Document&, const Holder&) = 0;
 
         virtual ~serializer() {}
     };
 
-    template<typename Node, typename Serializer>
+    template<typename Holder, typename Serializer>
     class serializer_wrapper :
-        public serializer<Node>
+        public serializer<Holder>
     {
     public:
         serializer_wrapper(const Serializer& serializer_) :
             serializer(serializer_)
         {}
 
-        void save(Document& d, Node& n) const       { serializer.save(d, n); }
-        void load(const Document& d, const Node& n) { serializer.load(d, n); }
+        void save(Document& d, xmlpp::node& parent) const       
+        {
+            generic_holder<Serializer, Holder> holder;
+            serializer.save( d, holder(serializer, parent) ); 
+        }
+
+        void load(const Document& d, const Holder& n) { serializer.load(d, n); }
 
     public:
         Serializer serializer;
@@ -80,9 +110,7 @@ public:
                                                i != elementSerializers.end();
                                                ++i )
         {
-            xmlpp::element element(i->first);
-            i->second->save(d, element);
-            add_child(d, element);
+            i->second->save(d, d);
         }
     }
 
@@ -93,8 +121,7 @@ public:
                                                  i != attributeSerializers.end();
                                                  ++i )
         {
-            e.set_attribute(i->first, "");
-            i->second->save( d, *e.first_attribute(i->first) );
+            i->second->save(d, e);
         }
 
         // save elements
@@ -102,9 +129,7 @@ public:
                                                i != elementSerializers.end();
                                                ++i )
         {
-            xmlpp::element element(i->first);
-            i->second->save(d, element);
-            add_child(e, element);
+            i->second->save(d, e);
         }
     }
 
