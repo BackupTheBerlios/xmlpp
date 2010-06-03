@@ -311,7 +311,7 @@ name_value_pair
         default_constructor<Y*>
     >
 >
-as_element_set(const std::string& elementName, std::vector<T*>& values)
+as_derived_element_set(const std::string& elementName, std::vector<T*>& values)
 {
     typedef container_serializer< typename std::vector<T*>::iterator,
                                   std::back_insert_iterator< std::vector<T*> >,
@@ -334,7 +334,7 @@ name_value_pair
         default_constructor< boost::shared_ptr<Y> > 
     >
 >
-as_element_set(const std::string& elementName, std::vector< boost::shared_ptr<T> >& values)
+as_derived_element_set(const std::string& elementName, std::vector< boost::shared_ptr<T> >& values)
 {
     typedef container_serializer< typename std::vector< boost::shared_ptr<T> >::iterator,
                                   std::back_insert_iterator< std::vector< boost::shared_ptr<T> > >,
