@@ -18,13 +18,13 @@ public:
     {}
 
     template<typename Document>
-    void load(const Document& d, const xmlpp_holder_type& e) const
+    void load(const Document& d, const xmlpp_holder_type& e)
     {
         function(d, e);
     }
 
     template<typename Document>
-    void save(Document&, xmlpp_holder_type&)
+    void save(Document&, xmlpp_holder_type&) const
     {
         assert(!"Not implemented");
     }
@@ -45,7 +45,7 @@ public:
     {}
 
     template<typename Document>
-    void load(const Document&, const xmlpp_holder_type&) const
+    void load(const Document&, const xmlpp_holder_type&)
     {
         assert(!"Not implemented");
     }
