@@ -26,6 +26,11 @@ enum serialization_state
         else save(d, n);\
     }
 
+#define XMLPP_ELEMENT_SERIALIZATION(Type, Document) \
+    void serialize(Document& d, xmlpp::element& e, xmlpp::serialization_state state);\
+    void save(Document& d, xmlpp::element& n) const { const_cast<Type*>(this)->serialize(d, n, xmlpp::SERIALIZATION_SAVE); }\
+    void load(const Document& d, const xmlpp::element& n) { this->serialize(const_cast<Document&>(d), const_cast<xmlpp::element&>(n), xmlpp::SERIALIZATION_LOAD); }
+
 template<typename Serializer, typename Holder>
 struct generic_holder;
 

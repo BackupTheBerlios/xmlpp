@@ -299,6 +299,79 @@ as_element_set(const std::string& elementName, std::vector<T>& values)
     return name_value_pair<serializer>( elementName, serializer( values.begin(), values.end(), std::back_inserter(values) ) );
 }
 
+//================================================== TEXT ==================================================//
+
+template<typename ValueType, typename OutIterator>
+name_value_pair
+<
+    container_loader< OutIterator,
+                      ValueType,
+                      text_serializer<ValueType> > 
+>
+as_text_set(const std::string& elementName, OutIterator out)
+{
+    typedef container_loader< OutIterator,
+                              ValueType,
+                              text_serializer<ValueType> > serializer;
+
+    return name_value_pair<serializer>( elementName, serializer(out) );
+}
+
+template<typename InIterator>
+name_value_pair
+<
+    container_saver< InIterator,
+                     text_serializer<typename InIterator::value_type> > 
+>
+as_text_set(const std::string& elementName, InIterator begin, InIterator end)
+{
+    typedef container_saver< InIterator,
+                             text_serializer<typename InIterator::value_type> > serializer;
+
+    return name_value_pair<serializer>( elementName, serializer(begin, end) );
+}
+
+template<typename ValueType, typename InIterator, typename OutIterator>
+name_value_pair
+<
+    container_serializer< InIterator,
+                          OutIterator,
+                          ValueType,
+                          text_serializer<ValueType> > 
+>
+as_text_set(const std::string& elementName, InIterator begin, InIterator end, OutIterator out)
+{
+    typedef container_serializer< InIterator,
+                                  OutIterator,
+                                  ValueType,
+                                  text_serializer<ValueType> > serializer;
+
+    return name_value_pair<serializer>( elementName, serializer(begin, end, out) );
+}
+
+template<typename T>
+name_value_pair
+<
+    container_serializer
+    < 
+        typename std::vector<T>::iterator,
+        std::back_insert_iterator< std::vector<T> >,
+        T,
+        text_serializer<T, T> 
+    >
+>
+as_text_set(const std::string& elementName, std::vector<T>& values)
+{
+    typedef container_serializer< typename std::vector<T>::iterator,
+                                  std::back_insert_iterator< std::vector<T> >,
+                                  T,
+                                  text_serializer<T, T> > serializer;
+
+    return name_value_pair<serializer>( elementName, serializer( values.begin(), values.end(), std::back_inserter(values) ) );
+}
+
+//================================================== DERIVED ==================================================//
+
 template<typename Y, typename T>
 name_value_pair
 <
