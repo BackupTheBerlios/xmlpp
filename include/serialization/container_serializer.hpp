@@ -8,24 +8,6 @@
 
 namespace xmlpp {
 
-template<typename T>
-struct default_constructor
-{
-    T operator () (void) const { return T(); }
-};
-
-template<typename T>
-struct default_constructor<T*>
-{
-    T* operator () (void) const { return new T(); }
-};
-
-template<typename T>
-struct default_constructor< boost::shared_ptr<T> >
-{
-    boost::shared_ptr<T> operator () (void) const { return boost::shared_ptr<T>(new T); }
-};
-
 template< typename OutIterator,
           typename Serializer,
           typename ValueType,
@@ -230,6 +212,146 @@ struct generic_holder< name_value_pair< container_serializer< InIterator,
     }
 };
 
+// container to text string
+template<typename InIterator>
+class container_to_string
+{
+public:
+    typedef element xmlpp_holder_type;
+
+public:
+    container_to_string(InIterator begin_, InIterator end_) :
+        begin(begin_),
+        end(end_)
+    {}
+
+    template<typename Document>
+    void save(Document& d, xmlpp_holder_type& e) const
+    {
+        std::ostringstream ss;
+        for (InIterator iter  = begin;
+                        iter != end;
+                        ++iter)
+        {
+            ss << (*iter);
+        }
+        e.set_text( ss.str() );
+    }
+
+private:
+    InIterator  begin;
+    InIterator  end;
+};
+
+template< typename OutIterator,
+          typename ValueType,
+          typename Constructor = default_constructor<ValueType> >
+class container_from_string
+{
+public:
+    typedef element xmlpp_holder_type;
+
+public:
+    explicit container_from_string( OutIterator out_,
+                                    Constructor constructor_ = Constructor() ) :
+        out(out_),
+        constructor(constructor_)
+    {}
+
+    template<typename Document>
+    void load(const Document& d, const xmlpp_holder_type& e)
+    {
+        istringstream ss( e.get_text() );
+        while ( !ss.eof() ) 
+        {
+            ValueType val = constructor();
+            ss >> val;
+            if ( ss.fail() ) {
+                throw dom_error("Can't read element value");
+            }
+            *out++ = val;
+        }
+    }
+
+private:
+    OutIterator out;
+    Constructor constructor;
+};
+
+template< typename InIterator, 
+          typename OutIterator,
+          typename ValueType,
+          typename Constructor = default_constructor<ValueType> >
+class container_as_string :
+    public container_to_string<InIterator>,
+    public container_from_string<OutIterator, ValueType, Constructor>
+{
+public:
+    typedef element xmlpp_holder_type;
+
+public:
+    container_as_string( InIterator begin, 
+                         InIterator end, 
+                         OutIterator out,
+                         Constructor constructor = Constructor() ) :
+        container_to_string<InIterator>(begin, end),
+        container_from_string<OutIterator, ValueType, Constructor>(out, constructor)
+    {}
+};
+
+//================================================== STRING ==================================================//
+
+template<typename InIterator>
+container_to_string<InIterator> to_string(InIterator begin, InIterator end)
+{
+    return container_to_string<InIterator>(begin, end);
+}
+
+template<typename T>
+container_to_string<typename std::vector<T>::const_iterator> to_string(const std::vector<T>& values)
+{
+    return container_to_string<std::vector<T>::const_iterator>( values.begin(), values.end() );
+}
+
+template<typename OutIterator,
+         typename ValueType>
+container_from_string<OutIterator, ValueType> from_string(OutIterator out)
+{
+    return container_from_string<OutIterator, ValueType>(out);
+}
+
+template<typename T>
+container_from_string< std::back_insert_iterator< std::vector<T> >, T > from_string(std::vector<T>& values)
+{
+    return container_from_string< std::back_insert_iterator< std::vector<T> >, T >( std::back_inserter(values) );
+}
+
+template<typename ValueType,
+         typename InIterator,
+         typename OutIterator>
+container_as_string<InIterator, OutIterator, ValueType> as_string(InIterator begin, InIterator end, OutIterator out)
+{
+    return container_as_string<InIterator, OutIterator, ValueType>(begin, end, out);
+}
+
+template<typename T>
+container_as_string
+< 
+    typename std::vector<T>::const_iterator, 
+    std::back_insert_iterator< std::vector<T> >, 
+    T 
+> 
+as_string(std::vector<T>& values)
+{
+    typedef container_as_string < typename std::vector<T>::const_iterator, 
+                                  std::back_insert_iterator< std::vector<T> >, 
+                                  T > serializer;
+
+    return serializer( values.begin(), values.end(), std::back_inserter(values) );
+}
+
+//================================================== ELEMENT ==================================================//
+
 template<typename ValueType, typename OutIterator>
 name_value_pair
 <
@@ -384,7 +506,7 @@ name_value_pair
         default_constructor<Y*>
     >
 >
-as_derived_element_set(const std::string& elementName, std::vector<T*>& values)
+as_element_ptr_set(const std::string& elementName, std::vector<T*>& values)
 {
     typedef container_serializer< typename std::vector<T*>::iterator,
                                   std::back_insert_iterator< std::vector<T*> >,
@@ -407,13 +529,36 @@ name_value_pair
         default_constructor< boost::shared_ptr<Y> > 
     >
 >
-as_derived_element_set(const std::string& elementName, std::vector< boost::shared_ptr<T> >& values)
+as_element_ptr_set(const std::string& elementName, std::vector< boost::shared_ptr<T> >& values)
 {
     typedef container_serializer< typename std::vector< boost::shared_ptr<T> >::iterator,
                                   std::back_insert_iterator< std::vector< boost::shared_ptr<T> > >,
                                   boost::shared_ptr<T>,
                                   element_serializer< boost::shared_ptr<T>, boost::shared_ptr<Y> >,
                                   default_constructor< boost::shared_ptr<Y> > > serializer;
+
+    return name_value_pair<serializer>( elementName, serializer( values.begin(), values.end(), std::back_inserter(values) ) );
+}
+
+template<typename Y, typename T>
+name_value_pair
+<
+    container_serializer
+    < 
+        typename std::vector< boost::intrusive_ptr<T> >::iterator,
+        std::back_insert_iterator< std::vector< boost::intrusive_ptr<T> > >,
+        boost::intrusive_ptr<T>,
+        element_serializer< boost::intrusive_ptr<T>, boost::intrusive_ptr<Y> >,
+        default_constructor< boost::intrusive_ptr<Y> > 
+    >
+>
+as_element_ptr_set(const std::string& elementName, std::vector< boost::intrusive_ptr<T> >& values)
+{
+    typedef container_serializer< typename std::vector< boost::intrusive_ptr<T> >::iterator,
+                                  std::back_insert_iterator< std::vector< boost::intrusive_ptr<T> > >,
+                                  boost::intrusive_ptr<T>,
+                                  element_serializer< boost::intrusive_ptr<T>, boost::shared_ptr<Y> >,
+                                  default_constructor< boost::intrusive_ptr<Y> > > serializer;
 
     return name_value_pair<serializer>( elementName, serializer( values.begin(), values.end(), std::back_inserter(values) ) );
 }
