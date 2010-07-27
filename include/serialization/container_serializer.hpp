@@ -204,7 +204,7 @@ struct generic_holder< name_value_pair< container_serializer<InIterator,
             {
                 element child(nvp.name);
                 if ( nvp.serializer.policy.valid(*iter) ) {
-                    add_child(parent, first);
+                    add_child(parent, child);
                 }
             }
 

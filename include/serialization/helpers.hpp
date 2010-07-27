@@ -1,10 +1,29 @@
 #ifndef XMLPP_SERIALIZATION_HELPERS_HPP
 #define XMLPP_SERIALIZATION_HELPERS_HPP
 
-#include <deque>
 #include <iterator>
-#include <list>
-#include <vector>
+
+// forward
+namespace boost 
+{
+    template<typename T>
+    class shared_ptr;
+    
+    template<typename T>
+    class intrusive_ptr;
+}
+
+namespace std
+{
+    template<typename T, typename A>
+    class deque;
+
+    template<typename T, typename A>
+    class list;
+
+    template<typename T, typename A>
+    class vector;
+}
 
 namespace xmlpp {
 
