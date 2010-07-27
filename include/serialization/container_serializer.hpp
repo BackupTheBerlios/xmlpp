@@ -1,16 +1,15 @@
 #ifndef XMLPP_SERIALIZATION_CONTAINER_SERIALIZER_HPP
 #define XMLPP_SERIALIZATION_CONTAINER_SERIALIZER_HPP
 
-#include "generic_serializer.hpp"
 #include "element_serializer.hpp"
-#include <iterator>
-#include <vector>
+#include "generic_serializer.hpp"
+#include "text_serializer.hpp"
 
 namespace xmlpp {
 
 template< typename OutIterator,
-          typename Serializer,
-          typename ValueType,
+          typename ValueType = iterator_traits<OutIterator>::value_type,
+          typename Policy = default_serialization_policy<ValueType>,
           typename Constructor = default_constructor<ValueType> >
 class container_loader
 {
@@ -19,35 +18,43 @@ public:
 
 public:
     container_loader( OutIterator outIter_, 
-                      Constructor constructor_ = Constructor() ) :
+                      Constructor constructor_ = Constructor(),
+                      Policy      policy_ = Policy() ) :
         outIter(outIter_),
-        constructor(constructor_)
+        constructor(constructor_),
+        policy(policy_)
     {}
 
     template<typename Document>
     void load(const Document& d, const xmlpp_holder_type& e)
     {
         ValueType value = constructor();
-        Serializer(value).load(d, e);
+        if ( policy.valid(value) ) {
+            policy.load(d, e, value);
+        }
         (*outIter++) = value;
     }
 
 public:
     OutIterator outIter;
     Constructor constructor;
+    Policy      policy;
 };
 
 template<typename InIterator, 
-         typename Serializer>
+         typename Policy = default_serialization_policy<ValueType> >
 class container_saver
 {
 public:
     typedef element xmlpp_holder_type;
 
 public:
-    container_saver(InIterator firstIter_, InIterator endIter_) :
+    container_saver(InIterator firstIter_, 
+                    InIterator endIter_,
+                    Policy     policy_ = Policy() ) :
         firstIter(firstIter_),
-        endIter(endIter_)
+        endIter(endIter_),
+        policy(policy_)
     {}
 
     template<typename Document>
@@ -58,9 +65,8 @@ public:
                         iter != endIter;
                         ++iter)
         {
-            Serializer serializer(*iter);
-            if ( serializer.valid() ) {
-                serializer.save(d, *holder++);
+            if ( policy.valid(*iter) ) {
+                policy.save(d, *holder++, *iter);
             }
         }
     }
@@ -68,32 +74,92 @@ public:
 public:
     InIterator  firstIter;
     InIterator  endIter;
+    Policy      policy;
+};
+
+template<typename InIterator, 
+         typename OutIterator, 
+         typename ValueType,
+         typename Policy = default_serialization_policy<ValueType>,
+         typename Constructor = default_constructor<ValueType> >
+class container_serializer
+{
+public:
+    typedef element xmlpp_holder_type;
+
+public:
+    container_serializer( InIterator    firstIter_,
+                          InIterator    endIter_,
+                          OutIterator   outIter_,
+                          Constructor   constructor_ = Constructor(),
+                          Policy        policy_ = Policy() ) :
+        firstIter(firstIter_),
+        endIter(endIter_),
+        outIter(outIter_),
+        constructor(constructor_),
+        policy(policy_)
+    {}
+
+    template<typename Document>
+    void load(const Document& d, const xmlpp_holder_type& e)
+    {
+        ValueType value = constructor();
+        if ( policy.valid(value) ) {
+            policy.load(d, e, value);
+        }
+        (*outIter++) = value;
+    }
+
+    template<typename Document>
+    void save(Document& d, xmlpp_holder_type& e) const
+    {
+        xmlpp::element_iterator holder(e);
+        for (InIterator iter  = firstIter;
+                        iter != endIter;
+                        ++iter)
+        {
+            if ( policy.valid(*iter) ) {
+                policy.save(d, *holder++, *iter);
+            }
+        }
+    }
+
+public:
+    InIterator  firstIter;
+    InIterator  endIter;
+    OutIterator outIter;
+    Constructor constructor;
+    Policy      policy;
 };
 
 template< typename InIterator, 
-          typename Serializer >
+          typename Policy >
 struct generic_holder< name_value_pair< container_saver<InIterator, 
-                                                        Serializer> >, 
+                                                        Policy> >, 
                        xmlpp::element >
 {
     typedef name_value_pair< container_saver<InIterator, 
-                                             Serializer> > nvp_type;
+                                             Policy> > nvp_type;
 
     element operator () (const nvp_type& nvp, node& parent)
     {
-        if ( nvp.serializer.firstIter != nvp.serializer.endIter)
+        if ( nvp.serializer.firstIter != nvp.serializer.endIter )
         {
+            InIterator iter = nvp.serializer.firstIter;
+
             // remember first child
             element first(nvp.name);
-            add_child(parent, first);
+            if ( nvp.serializer.policy.valid(*iter++) ) {
+                add_child(parent, first);
+            }
 
             // allocate children for every object in the sequence
-            for (InIterator iter  = nvp.serializer.firstIter, ++iter;
-                            iter != nvp.serializer.endIter;
-                            ++iter)
+            for (; iter != nvp.serializer.endIter; ++iter)
             {
                 element child(nvp.name);
-                add_child(parent, child);
+                if ( nvp.serializer.policy.valid(*iter) ) {
+                    add_child(parent, first);
+                }
             }
 
             return first;
@@ -106,109 +172,46 @@ struct generic_holder< name_value_pair< container_saver<InIterator,
 template<typename InIterator, 
          typename OutIterator, 
          typename ValueType,
-         typename Serializer,
-         typename Constructor = default_constructor<ValueType> >
-class container_serializer :
-    public container_saver<InIterator, Serializer>,
-    public container_loader<OutIterator, Serializer, ValueType, Constructor>
-{
-public:
-    typedef element xmlpp_holder_type;
-
-public:
-    container_serializer( InIterator         firstIter_,
-                          InIterator         endIter_,
-                          OutIterator        outIter_,
-                          Constructor        constructor_ = Constructor() ) :
-        container_saver<InIterator, Serializer>(firstIter_, endIter_),
-        container_loader<OutIterator, Serializer, ValueType, Constructor>(outIter_, constructor_)
-    {}
-};
-
-template< typename InIterator, 
-          typename OutIterator, 
-          typename ValueType,
-          typename Serializer,
-          typename Constructor >
+         typename Policy,
+         typename Constructor>
 struct generic_holder< name_value_pair< container_serializer<InIterator, 
                                                              OutIterator,
                                                              ValueType,
-                                                             Serializer,
+                                                             Policy,
                                                              Constructor> >, 
                        xmlpp::element >
 {
     typedef name_value_pair< container_serializer<InIterator, 
                                                   OutIterator,
                                                   ValueType,
-                                                  Serializer,
+                                                  Policy,
                                                   Constructor> > nvp_type;
 
     element operator () (const nvp_type& nvp, node& parent)
     {
-        if ( nvp.serializer.firstIter != nvp.serializer.endIter)
+        if ( nvp.serializer.firstIter != nvp.serializer.endIter )
         {
+            InIterator iter = nvp.serializer.firstIter;
+
             // remember first child
             element first(nvp.name);
-            add_child(parent, first);
+            if ( nvp.serializer.policy.valid(*iter++) ) {
+                add_child(parent, first);
+            }
 
             // allocate children for every object in the sequence
-            InIterator iter = nvp.serializer.firstIter;
-            for (++iter; iter != nvp.serializer.endIter; ++iter)
+            for (; iter != nvp.serializer.endIter; ++iter)
             {
                 element child(nvp.name);
-                add_child(parent, child);
+                if ( nvp.serializer.policy.valid(*iter) ) {
+                    add_child(parent, first);
+                }
             }
 
             return first;
         }
 
         return element("null");
-    }
-};
-
-// Specialize for saving containers of pointers
-template< typename InIterator, 
-          typename OutIterator, 
-          typename T,
-          typename Y,
-          typename Constructor >
-struct generic_holder< name_value_pair< container_serializer< InIterator, 
-                                                              OutIterator,
-                                                              T,
-                                                              element_serializer<T, Y>,
-                                                              Constructor > >, 
-                       xmlpp::element >
-{
-    typedef name_value_pair< container_serializer< InIterator, 
-                                                   OutIterator,
-                                                   T,
-                                                   element_serializer<T, Y>,
-                                                   Constructor > > nvp_type;
-
-    element operator () (const nvp_type& nvp, node& parent)
-    {
-        element first = element("null");
-        bool    empty = true;
-
-        // make elements only for valid serializers
-        for (InIterator iter  = nvp.serializer.firstIter; 
-                        iter != nvp.serializer.endIter; 
-                        ++iter)
-        {
-            if ( element_serializer<T,Y>(*iter).valid() )
-            {
-                element child(nvp.name);
-                add_child(parent, child);
-
-                if (empty) 
-                {
-                    first = child;
-                    empty = false;
-                }
-            }
-        }
-
-        return first;
     }
 };
 
@@ -301,266 +304,352 @@ public:
 
 //================================================== STRING ==================================================//
 
+/** Make saver, printing range of elements to the string using std::ostringstream::operator << 
+ * @tparam Container - container type. By default enabled for std::vector, std::list, std::deque. 
+ * @see enable_for_container
+ */ 
 template<typename InIterator>
 container_to_string<InIterator> to_string(InIterator begin, InIterator end)
 {
     return container_to_string<InIterator>(begin, end);
 }
 
-template<typename T>
-container_to_string<typename std::vector<T>::const_iterator> to_string(const std::vector<T>& values)
+/** Make saver, printing container elements to the string using std::ostringstream::operator << 
+ * @tparam Container - container type. By default enabled for std::vector, std::list, std::deque. 
+ * @see enable_for_container
+ */ 
+template<typename Container>
+container_to_string<typename Container::const_iterator> to_string(const Container& values, 
+                                                                  typename enable_for_container<Container>::tag* toggle = 0)
 {
-    return container_to_string<std::vector<T>::const_iterator>( values.begin(), values.end() );
+    return container_to_string<Container::const_iterator>( values.begin(), values.end() );
 }
 
-template<typename OutIterator,
-         typename ValueType>
-container_from_string<OutIterator, ValueType> from_string(OutIterator out)
+/** Make loader, reading from the string using std::istringstream::operator >>
+ * @param out - output iterator for placing readed elements.
+ */ 
+template<typename OutIterator>
+container_from_string
+<
+    OutIterator, 
+    typename iterator_traits<OutIterator>::value_type
+> 
+from_string(OutIterator out)
 {
     return container_from_string<OutIterator, ValueType>(out);
 }
 
-template<typename T>
-container_from_string< std::back_insert_iterator< std::vector<T> >, T > from_string(std::vector<T>& values)
+/** Make loader, reading from the string using std::istringstream::operator >>
+ * @param out - output iterator for placing readed elements.
+ * @param cons - functor for constructing container objects.
+ */ 
+template<typename Constructor, typename OutIterator>
+container_from_string
+<
+    OutIterator, 
+    typename iterator_traits<OutIterator>::value_type, 
+    Constructor
+> 
+from_string(OutIterator out, Constructor cons)
 {
-    return container_from_string< std::back_insert_iterator< std::vector<T> >, T >( std::back_inserter(values) );
+    return container_from_string<OutIterator, typename iterator_traits<OutIterator>::value_type, Constructor>(out, cons);
 }
 
-template<typename ValueType,
+/** Make loader, reading from the string and adding them to the end of the container using std::istringstream::operator >>
+ * @tparam Container - container type. By default enabled for std::vector, std::list, std::deque. 
+ * @see enable_for_container
+ */ 
+template<typename Container>
+container_from_string
+< 
+    std::back_insert_iterator<Container>, 
+    typename Container::value_type 
+> 
+from_string(Container& values, 
+            typename enable_for_container<Container>::tag* toggle = 0)
+{
+    return container_from_string< std::back_insert_iterator<Container>, typename Container::value_type >( std::back_inserter(values) );
+}
+
+/** Make loader, reading from the string and adding them to the end of the container using std::istringstream::operator >>
+ * @tparam Container - container type. By default enabled for std::vector, std::list, std::deque. 
+ * @see enable_for_container
+ */ 
+template<typename Constructor, typename Container>
+container_from_string
+< 
+    std::back_insert_iterator<Container>, 
+    typename Container::value_type,
+    Constructor
+> 
+from_string(Container& values, 
+            Constructor cons, 
+            typename enable_for_container<Container>::tag* toggle = 0)
+{
+    typedef container_from_string< std::back_insert_iterator<Container>, 
+                                   typename Container::value_type,
+                                   Constructor > serializer;
+
+    return serializer( std::back_inserter(values), cons );
+}
+
+/** Make serializaer, saving elements in the range to the string using std::ostringstream::operator << and reading
+ * elements from the string, using std::istringstream::operator >> 
+ * @param begin - iterator addressing first element in the range for saving.
+ * @param end - iterator addressing end element in the range for saving.
+ * @param out - iterator for placing read elements.
+ */
+template<typename InIterator,
+         typename OutIterator>
+container_as_string
+<
+    InIterator, 
+    OutIterator, 
+    typename iterator_traits<OutIterator>::value_type
+> 
+as_string(InIterator begin, InIterator end, OutIterator out)
+{
+    return container_as_string<InIterator, OutIterator, typename iterator_traits<OutIterator>::value_type>(begin, end, out);
+}
+
+/** Make serializaer, saving elements in the range to the string using std::ostringstream::operator << and reading
+ * elements from the string, using std::istringstream::operator >> 
+ * @param begin - iterator addressing first element in the range for saving.
+ * @param end - iterator addressing end element in the range for saving.
+ * @param out - iterator for placing read elements.
+ * @param const - functor constructing objects for output.
+ */
+template<typename Constructor,
          typename InIterator,
          typename OutIterator>
-container_as_string<InIterator, OutIterator, ValueType> as_string(InIterator begin, InIterator end, OutIterator out)
+container_as_string
+<
+    InIterator, 
+    OutIterator, 
+    typename iterator_traits<OutIterator>::value_type, 
+    Constructor
+> 
+as_string(InIterator begin, InIterator end, OutIterator out, Constructor cons)
 {
-    return container_as_string<InIterator, OutIterator, ValueType>(begin, end, out);
+    typedef container_as_string< InIterator, 
+                                 OutIterator, 
+                                 typename iterator_traits<OutIterator>::value_type, 
+                                 Constructor > serializer;
+
+    return serializer(begin, end, out, cons);
 }
 
-template<typename T>
+/** Make serializer, saving and loading container elements to/from string using std::stringstream::operator <</>>
+ * @tparam Container - container type. By default enabled for std::vector, std::list, std::deque. 
+ * @see enable_for_container
+ */ 
+template<typename Container>
 container_as_string
 < 
-    typename std::vector<T>::const_iterator, 
-    std::back_insert_iterator< std::vector<T> >, 
-    T 
+    typename Container::const_iterator, 
+    std::back_insert_iterator<Container>, 
+    typename Container::value_type 
 > 
-as_string(std::vector<T>& values)
+as_string(Container& values,
+          typename enable_for_container<Container>::tag* toggle = 0)
 {
-    typedef container_as_string < typename std::vector<T>::const_iterator, 
-                                  std::back_insert_iterator< std::vector<T> >, 
-                                  T > serializer;
+    typedef container_as_string < typename Container::const_iterator, 
+                                  std::back_insert_iterator<Container>, 
+                                  typename Container::value_type > serializer;
 
     return serializer( values.begin(), values.end(), std::back_inserter(values) );
 }
 
 //================================================== ELEMENT ==================================================//
 
-template<typename ValueType, typename OutIterator>
-name_value_pair
-<
-    container_loader< OutIterator,
-                      ValueType,
-                      element_serializer<ValueType> > 
+template<typename OutIterator>
+container_loader
+< 
+    OutIterator,
+    typename iterator_traits<OutIterator>::value_type,
+    default_serialization_policy<typename iterator_traits<OutIterator>::value_type> 
 >
-as_element_set(const std::string& elementName, OutIterator out)
+from_element_set(OutIterator out)
 {
     typedef container_loader< OutIterator,
-                              ValueType,
-                              element_serializer<ValueType> > serializer;
+                              typename iterator_traits<OutIterator>::value_type,
+                              default_serialization_policy<typename iterator_traits<OutIterator>::value_type>  > serializer;
 
-    return name_value_pair<serializer>( elementName, serializer(out) );
+    return serializer(out);
 }
 
 template<typename InIterator>
-name_value_pair
-<
-    container_saver< InIterator,
-                     element_serializer<typename InIterator::value_type> > 
+container_saver
+< 
+    InIterator,  
+    default_serialization_policy<typename iterator_traits<InIterator>::value_type> 
 >
-as_element_set(const std::string& elementName, InIterator begin, InIterator end)
+to_element_set(InIterator begin, 
+               InIterator end)
 {
     typedef container_saver< InIterator,
-                             element_serializer<typename InIterator::value_type> > serializer;
+                             default_serialization_policy<typename iterator_traits<InIterator>::value_type> > serializer;
 
-    return name_value_pair<serializer>( elementName, serializer(begin, end) );
+    return serializer(begin, end);
 }
 
-template<typename ValueType, typename InIterator, typename OutIterator>
-name_value_pair
+template<typename InIterator, typename OutIterator>
+container_serializer
 <
-    container_serializer< InIterator,
-                          OutIterator,
-                          ValueType,
-                          element_serializer<ValueType> > 
+    InIterator,
+    OutIterator,
+    typename iterator_traits<OutIterator>::value_type,
+    default_serialization_policy<typename iterator_traits<OutIterator>::value_type> 
 >
-as_element_set(const std::string& elementName, InIterator begin, InIterator end, OutIterator out)
+as_element_set(InIterator begin, InIterator end, OutIterator out)
 {
     typedef container_serializer< InIterator,
                                   OutIterator,
-                                  ValueType,
-                                  element_serializer<ValueType> > serializer;
+                                  typename iterator_traits<OutIterator>::value_type,
+                                  default_serialization_policy<typename iterator_traits<OutIterator>::value_type> > serializer;
 
-    return name_value_pair<serializer>( elementName, serializer(begin, end, out) );
+    return serializer(begin, end, out);
 }
 
-template<typename T>
-name_value_pair
-<
-    container_serializer
-    < 
-        typename std::vector<T>::iterator,
-        std::back_insert_iterator< std::vector<T> >,
-        T,
-        element_serializer<T, T> 
-    >
+/** Make serializer, saving and loading container elements to/from corresponding elements.
+ * @tparam Container - container type. By default enabled for std::vector, std::list, std::deque. 
+ * @see enable_for_container
+ */ 
+template<typename Container>
+container_serializer
+< 
+    typename Container::iterator,
+    std::back_insert_iterator<Container>,
+    typename Container::value_type,
+    default_serialization_policy<typename Container::value_type> 
 >
-as_element_set(const std::string& elementName, std::vector<T>& values)
+as_element_set(Container& values,
+               typename enable_for_container<Container>::tag* toggle = 0)
 {
-    typedef container_serializer< typename std::vector<T>::iterator,
-                                  std::back_insert_iterator< std::vector<T> >,
-                                  T,
-                                  element_serializer<T, T> > serializer;
+    typedef container_serializer< typename Container::iterator,
+                                  std::back_insert_iterator<Container>,
+                                  typename Container::value_type,
+                                  default_serialization_policy<typename Container::value_type> > serializer;
 
-    return name_value_pair<serializer>( elementName, serializer( values.begin(), values.end(), std::back_inserter(values) ) );
+    return serializer( values.begin(), values.end(), std::back_inserter(values) );
 }
 
 //================================================== TEXT ==================================================//
 
-template<typename ValueType, typename OutIterator>
-name_value_pair
-<
-    container_loader< OutIterator,
-                      ValueType,
-                      text_serializer<ValueType> > 
+template<typename OutIterator>
+container_loader
+< 
+    OutIterator,
+    typename iterator_traits<OutIterator>::value_type,
+    text_serialization_policy<typename iterator_traits<OutIterator>::value_type> 
 >
-as_text_set(const std::string& elementName, OutIterator out)
+from_text_set(OutIterator out)
 {
     typedef container_loader< OutIterator,
-                              ValueType,
-                              text_serializer<ValueType> > serializer;
+                              typename iterator_traits<OutIterator>::value_type,
+                              text_serialization_policy<typename iterator_traits<OutIterator>::value_type> > serializer;
 
-    return name_value_pair<serializer>( elementName, serializer(out) );
+    return serializer(out);
 }
 
 template<typename InIterator>
-name_value_pair
+container_saver
 <
-    container_saver< InIterator,
-                     text_serializer<typename InIterator::value_type> > 
+    InIterator,
+    text_serialization_policy<typename iterator_traits<InIterator>::value_type> 
 >
-as_text_set(const std::string& elementName, InIterator begin, InIterator end)
+to_text_set(InIterator begin, InIterator end)
 {
     typedef container_saver< InIterator,
-                             text_serializer<typename InIterator::value_type> > serializer;
+                             text_serialization_policy<typename InIterator::value_type> > serializer;
 
-    return name_value_pair<serializer>( elementName, serializer(begin, end) );
+    return serializer(begin, end);
 }
 
-template<typename ValueType, typename InIterator, typename OutIterator>
-name_value_pair
-<
-    container_serializer< InIterator,
-                          OutIterator,
-                          ValueType,
-                          text_serializer<ValueType> > 
+template<typename InIterator, typename OutIterator>
+container_serializer
+< 
+    InIterator,
+    OutIterator,
+    typename iterator_traits<OutIterator>::value_type,
+    text_serialization_policy<typename iterator_traits<OutIterator>::value_type> 
 >
-as_text_set(const std::string& elementName, InIterator begin, InIterator end, OutIterator out)
+as_text_set(InIterator begin, InIterator end, OutIterator out)
 {
     typedef container_serializer< InIterator,
                                   OutIterator,
-                                  ValueType,
-                                  text_serializer<ValueType> > serializer;
+                                  typename iterator_traits<OutIterator>::value_type,
+                                  text_serialization_policy<typename iterator_traits<OutIterator>::value_type> > serializer;
 
-    return name_value_pair<serializer>( elementName, serializer(begin, end, out) );
+    return serializer(begin, end, out);
 }
 
-template<typename T>
-name_value_pair
-<
-    container_serializer
-    < 
-        typename std::vector<T>::iterator,
-        std::back_insert_iterator< std::vector<T> >,
-        T,
-        text_serializer<T, T> 
-    >
+template<typename Container>
+container_serializer
+< 
+    typename Container::iterator,
+    std::back_insert_iterator<Container>,
+    typename Container::value_type,
+    text_serialization_policy<typename Container::value_type> 
 >
-as_text_set(const std::string& elementName, std::vector<T>& values)
+as_text_set(Container& values,
+            typename enable_for_container<Container>::tag* toggle = 0)
 {
-    typedef container_serializer< typename std::vector<T>::iterator,
-                                  std::back_insert_iterator< std::vector<T> >,
-                                  T,
-                                  text_serializer<T, T> > serializer;
+    typedef container_serializer< typename Container::iterator,
+                                  std::back_insert_iterator<Container>,
+                                  typename Container::value_type,
+                                  text_serialization_policy<typename Container::value_type> > serializer;
 
-    return name_value_pair<serializer>( elementName, serializer( values.begin(), values.end(), std::back_inserter(values) ) );
+    return serializer( values.begin(), values.end(), std::back_inserter(values) );
 }
 
 //================================================== DERIVED ==================================================//
 
-template<typename Y, typename T>
-name_value_pair
-<
-    container_serializer
-    < 
-        typename std::vector<T*>::iterator,
-        std::back_insert_iterator< std::vector<T*> >,
-        T*,
-        element_serializer<T*, Y*>,
-        default_constructor<Y*>
-    >
+template<typename Y, typename InIterator, typename OutIterator>
+container_serializer
+< 
+    InIterator,
+    OutIterator,
+    typename iterator_traits<OutIterator>::value_type,
+    dynamic_ptr_serialization_policy<typename iterator_traits<OutIterator>::value_type, typename convert_ptr<typename iterator_traits<OutIterator>::value_type, Y>::type>,
+    default_constructor<typename convert_ptr<typename iterator_traits<OutIterator>::value_type, Y>::type>
 >
-as_element_ptr_set(const std::string& elementName, std::vector<T*>& values)
+as_element_set(InIterator begin, 
+               InIterator end, 
+               OutIterator out,
+               typename convert_ptr<typename iterator_traits<OutIterator>::value_type, Y>::tag* toggle = 0)
 {
-    typedef container_serializer< typename std::vector<T*>::iterator,
-                                  std::back_insert_iterator< std::vector<T*> >,
-                                  T*,
-                                  element_serializer<T*, Y*>,
-                                  default_constructor<Y*> > serializer;
+    typedef container_serializer< InIterator,
+                                  OutIterator,
+                                  typename iterator_traits<OutIterator>::value_type,
+                                  dynamic_ptr_serialization_policy<typename iterator_traits<OutIterator>::value_type, typename convert_ptr<typename iterator_traits<OutIterator>::value_type, Y>::type>,
+                                  default_constructor<typename convert_ptr<typename iterator_traits<OutIterator>::value_type, Y>::type>
+                                 > serializer;
 
-    return name_value_pair<serializer>( elementName, serializer( values.begin(), values.end(), std::back_inserter(values) ) );
+    return serializer(begin, end, out);
 }
 
-template<typename Y, typename T>
-name_value_pair
-<
-    container_serializer
-    < 
-        typename std::vector< boost::shared_ptr<T> >::iterator,
-        std::back_insert_iterator< std::vector< boost::shared_ptr<T> > >,
-        boost::shared_ptr<T>,
-        element_serializer< boost::shared_ptr<T>, boost::shared_ptr<Y> >,
-        default_constructor< boost::shared_ptr<Y> > 
-    >
+template<typename Y, typename Container>
+container_serializer
+< 
+    typename Container::iterator,
+    std::back_insert_iterator<Container>,
+    typename Container::value_type,
+    dynamic_ptr_serialization_policy<typename Container::value_type, typename convert_ptr<typename Container::value_type, Y>::type>,
+    default_constructor< typename convert_ptr<typename Container::value_type, Y>::type >
 >
-as_element_ptr_set(const std::string& elementName, std::vector< boost::shared_ptr<T> >& values)
+as_element_set(Container& values,
+               typename enable_for_container<Container>::tag* tag0 = 0,
+               typename convert_ptr<typename Container::value_type, Y>::tag* tag1 = 0)
 {
-    typedef container_serializer< typename std::vector< boost::shared_ptr<T> >::iterator,
-                                  std::back_insert_iterator< std::vector< boost::shared_ptr<T> > >,
-                                  boost::shared_ptr<T>,
-                                  element_serializer< boost::shared_ptr<T>, boost::shared_ptr<Y> >,
-                                  default_constructor< boost::shared_ptr<Y> > > serializer;
+    typedef container_serializer< typename Container::iterator,
+                                  std::back_insert_iterator<Container>,
+                                  typename Container::value_type,
+                                  dynamic_ptr_serialization_policy<typename Container::value_type, typename convert_ptr<typename Container::value_type, Y>::type>,
+                                  default_constructor< typename convert_ptr<typename Container::value_type, Y>::type >
+                                > serializer;
 
-    return name_value_pair<serializer>( elementName, serializer( values.begin(), values.end(), std::back_inserter(values) ) );
-}
-
-template<typename Y, typename T>
-name_value_pair
-<
-    container_serializer
-    < 
-        typename std::vector< boost::intrusive_ptr<T> >::iterator,
-        std::back_insert_iterator< std::vector< boost::intrusive_ptr<T> > >,
-        boost::intrusive_ptr<T>,
-        element_serializer< boost::intrusive_ptr<T>, boost::intrusive_ptr<Y> >,
-        default_constructor< boost::intrusive_ptr<Y> > 
-    >
->
-as_element_ptr_set(const std::string& elementName, std::vector< boost::intrusive_ptr<T> >& values)
-{
-    typedef container_serializer< typename std::vector< boost::intrusive_ptr<T> >::iterator,
-                                  std::back_insert_iterator< std::vector< boost::intrusive_ptr<T> > >,
-                                  boost::intrusive_ptr<T>,
-                                  element_serializer< boost::intrusive_ptr<T>, boost::shared_ptr<Y> >,
-                                  default_constructor< boost::intrusive_ptr<Y> > > serializer;
-
-    return name_value_pair<serializer>( elementName, serializer( values.begin(), values.end(), std::back_inserter(values) ) );
+    return serializer( values.begin(), values.end(), std::back_inserter(values) );
 }
 
 } // namespace xmlpp

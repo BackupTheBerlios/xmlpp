@@ -15,8 +15,10 @@ SET (TARGET_SERIALIZATION_HEADERS
 	${HEADER_PATH}/serialization/custom_serializer.hpp
 	${HEADER_PATH}/serialization/element_serializer.hpp
 	${HEADER_PATH}/serialization/generic_serializer.hpp
+	${HEADER_PATH}/serialization/helpers.hpp
 	${HEADER_PATH}/serialization/name_value_pair.hpp
 	${HEADER_PATH}/serialization/serialization.hpp
+	${HEADER_PATH}/serialization/text_serializer.hpp
 )
 
 SOURCE_GROUP( headers FILES 				${TARGET_HEADERS} )

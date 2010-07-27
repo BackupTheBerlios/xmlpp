@@ -74,17 +74,17 @@ public:
     template<typename Document>
     void load(const Document& d, const xmlpp_holder_type& e)
     {
-        function(d, n, SERIALIZATION_LOAD);
+        function(d, n, LOAD);
     }
 
     template<typename Document>
     void save(Document& d, xmlpp_holder_type& e) const
     {
-        function(d, n, SERIALIZATION_SAVE);
+        function(d, n, SAVE);
     }
 
     template<typename Document>
-    void serialize(Document& d, xmlpp_holder_type& n, xmlpp::serialization_state state)
+    void serialize(Document& d, xmlpp_holder_type& n, xmlpp::s_state state)
     {
         function(d, n, state);
     }
@@ -93,38 +93,44 @@ private:
     Function function;
 };
 
+/** Setup custom function as element loader */
 template<typename Function>
-custom_loader<Function> as_custom_loader(Function function)
+custom_loader<Function, element> make_elem_loader(Function function)
 {
     return custom_loader<Function>(function);
 }
 
+/** Setup custom function as element saver */
 template<typename Function>
-custom_saver<Function> as_custom_saver(Function function)
+custom_saver<Function, element> make_elem_saver(Function function)
 {
     return custom_saver<Function>(function);
 }
 
+/** Setup custom function as element serializer */
 template<typename Function>
-custom_serializer<Function> as_custom_serializer(Function function)
+custom_serializer<Function, element> make_elem_serializer(Function function)
 {
     return custom_serializer<Function>(function);
 }
 
+/** Setup custom function as attribute loader */
 template<typename Function>
-custom_loader<Function, attribute> as_attr_loader(Function function)
+custom_loader<Function, attribute> make_attr_loader(Function function)
 {
     return custom_loader<Function, attribute>(function);
 }
 
+/** Setup custom function as attribute saver */
 template<typename Function>
-custom_saver<Function, attribute> as_attr_saver(Function function)
+custom_saver<Function, attribute> make_attr_saver(Function function)
 {
     return custom_saver<Function, attribute>(function);
 }
 
+/** Setup custom function as attribute serializer */
 template<typename Function>
-custom_serializer<Function, attribute> as_attr_serializer(Function function)
+custom_serializer<Function, attribute> make_attr_serializer(Function function)
 {
     return custom_serializer<Function, attribute>(function);
 }

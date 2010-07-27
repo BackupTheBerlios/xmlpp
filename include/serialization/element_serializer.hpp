@@ -2,319 +2,133 @@
 #define XMLPP_SERIALIZATION_ELEMENT_SERIALIZER_HPP
 
 #include "../element.h"
+#include "helpers.hpp"
 #include <boost/intrusive_ptr.hpp>
 #include <boost/shared_ptr.hpp>
-#include <sstream>
 
 namespace xmlpp {
 
+/** Make loader of the object from element. */
 template<typename T>
-struct default_constructor
+default_loader<T> from_element(T& item)
 {
-    T operator () (void) const { return T(); }
-};
-
-template<typename T>
-struct default_constructor<T*>
-{
-    T* operator () (void) const { return new T(); }
-};
-
-template<typename T>
-struct default_constructor< boost::shared_ptr<T> >
-{
-    boost::shared_ptr<T> operator () (void) const { return boost::shared_ptr<T>(new T); }
-};
-
-template<typename T>
-struct default_constructor< boost::intrusive_ptr<T> >
-{
-    boost::intrusive_ptr<T> operator () (void) const { return boost::intrusive_ptr<T>(new T); }
-};
-
-/** class serializes/deserializes object from the stream using operators <<, >> */
-template<typename T, typename Y = T>
-class text_serializer
-{
-public:
-    typedef element xmlpp_holder_type;
-
-public:
-    explicit text_serializer(T& _item) :
-        item(_item) {}
-
-    /** deserialize item from the stream */
-    template<typename Document>
-    void load(const Document& /*document*/, const xmlpp_holder_type& e)
-    {
-        std::istringstream ss( e.get_text() );
-        ss >> item;
-        
-        if ( ss.fail() ) {
-            throw dom_error("Can't read element value.");
-        }
-    }
-
-    /** serialize item into the stream */
-    template<typename Document>
-    void save(Document& /*document*/, xmlpp_holder_type& e) const
-    {
-        std::ostringstream ss;
-        ss << item;
-        
-        if ( ss.fail() ) {
-            throw dom_error("Can't read element value.");
-        }
-        e.set_text( ss.str() );
-    }
-
-    /** Check for validness */
-    bool valid() const { return true; }
-
-private:
-    T& item;
-};
-
-/** class serializer/deserializes object to the element */
-template< typename T, typename Y = T, typename Constructor = default_constructor<Y> >
-class element_serializer;
-
-template<typename T, typename Constructor>
-class element_serializer<T, T, Constructor>
-{
-public:
-    typedef element xmlpp_holder_type;
-
-public:
-    explicit element_serializer(T& serializer_) :
-        serializer(serializer_) {}
-
-    /** deserialize item from the stream */
-    template<typename Document>
-    void load(const Document& d, const xmlpp_holder_type& e)
-    {
-        serializer.load(d, e);
-    }
-
-    /** serialize item into the stream */
-    template<typename Document>
-    void save(Document& d, xmlpp_holder_type& e) const
-    {
-        serializer.save(d, e);
-    }
-
-    /** Check for validness */
-    bool valid() const { return true; }
-
-private:
-    T& serializer;
-};
-
-/** Specialization for serialization/deserialization ptr to object */
-template<typename T, typename Constructor>
-class element_serializer<T*,T*,Constructor>
-{
-public:
-    typedef element xmlpp_holder_type;
-
-public:
-    explicit element_serializer( T*& serializer_, Constructor constructor_ = Constructor() ) :
-        serializer(serializer_),
-        constructor(constructor_)
-    {
-    }
-
-    /** deserialize item from the stream */
-    template<typename Document>
-    void load(const Document& d, const xmlpp_holder_type& e)
-    {
-        if (!serializer) 
-        {
-            serializer = constructor();
-            assert(serializer);
-        }
-        serializer->load(d, e);
-    }
-
-    /** serialize item into the stream */
-    template<typename Document>
-    void save(Document& d, xmlpp_holder_type& e) const
-    {
-        if (serializer) {
-            serializer->save(d, e);
-        }
-    }
-
-    bool valid() const { return (serializer != 0); }
-
-private:
-    T*&         serializer;
-    Constructor constructor;
-};
-
-/** Specialization for serialization/deserialization shared_ptr to object */
-template<typename T, typename Constructor>
-class element_serializer< boost::shared_ptr<T>, 
-                          boost::shared_ptr<T>, 
-                          Constructor >
-{
-public:
-    typedef element xmlpp_holder_type;
-
-public:
-    explicit element_serializer( boost::shared_ptr<T>& serializer_, Constructor constructor_ = Constructor() ) :
-        serializer(serializer_),
-        constructor(constructor_)
-    {
-    }
-
-    /** deserialize item from the stream */
-    template<typename Document>
-    void load(const Document& d, const xmlpp_holder_type& e)
-    {
-        if (!serializer) 
-        {
-            serializer = constructor();
-            assert(serializer);
-        }
-        serializer->load(d, e);
-    }
-
-    /** serialize item into the stream */
-    template<typename Document>
-    void save(Document& d, xmlpp_holder_type& e) const
-    {
-        if (serializer) {
-            serializer->save(d, e);
-        }
-    }
-
-    bool valid() const { return (serializer.get() != 0); }
-
-private:
-    boost::shared_ptr<T>& serializer;
-    Constructor           constructor;
-};
-
-/** Specialization for serialization/deserialization ptr to base object */
-template<typename T, typename Y, typename Constructor>
-class element_serializer<T*,Y*,Constructor>
-{
-public:
-    typedef element xmlpp_holder_type;
-
-public:
-    explicit element_serializer( T*& serializer_, Constructor constructor_ = Constructor() ) :
-        serializer(serializer_),
-        constructor(constructor_)
-    {}
-
-    /** deserialize item from the stream */
-    template<typename Document>
-    void load(const Document& d, const xmlpp_holder_type& e)
-    {
-        Y* actual = dynamic_cast<Y*>(serializer);
-        if (actual) {
-            actual->load(d, e);
-        }
-        else 
-        {
-            actual = constructor();
-            assert(actual);
-            actual->load(d, e);
-            serializer = actual;
-        }
-    }
-
-    /** serialize item into the stream */
-    template<typename Document>
-    void save(Document& d, xmlpp_holder_type& e) const
-    {
-        if (serializer) 
-        {
-            assert( dynamic_cast<Y*>(serializer) );
-            static_cast<Y*>(serializer)->save(d, e);
-        }
-    }
-
-    bool valid() const { return (serializer != 0); }
-
-private:
-    T*&         serializer;
-    Constructor constructor;
-};
-
-/** Specialization for serialization/deserialization shared_ptr to object */
-template<typename T, typename Y, typename Constructor>
-class element_serializer< boost::shared_ptr<T>, boost::shared_ptr<Y>, Constructor >
-{
-public:
-    typedef element xmlpp_holder_type;
-
-public:
-    explicit element_serializer( boost::shared_ptr<T>& serializer_, Constructor constructor_ = Constructor() ) :
-        serializer(serializer_),
-        constructor(constructor_)
-    {}
-
-    /** deserialize item from the stream */
-    template<typename Document>
-    void load(const Document& d, const xmlpp_holder_type& e)
-    {
-        boost::shared_ptr<Y> actual = boost::shared_dynamic_cast<Y>(serializer);
-        if (actual) {
-            actual->load(d, e);
-        }
-        else 
-        {
-            actual = constructor();
-            assert(actual);
-            actual->load(d, e);
-            serializer = actual;
-        }
-    }
-
-    /** serialize item into the stream */
-    template<typename Document>
-    void save(Document& d, xmlpp_holder_type& e) const
-    {
-        if (serializer) 
-        {
-            assert( boost::shared_dynamic_cast<Y>(serializer) );
-            boost::shared_static_cast<Y>(serializer)->save(d, e);
-        }
-    }
-
-    /** Check for validness */
-    bool valid() const { return (serializer.get() != 0); }
-
-private:
-    boost::shared_ptr<T>&   serializer;
-    Constructor             constructor;
-};
-
-template<typename T>
-text_serializer<T,T> as_text(T& item)
-{
-    return text_serializer<T,T>(item);
+    return default_serializer<T>(item);
 }
 
-template<typename T>
-element_serializer<T,T> as_element(T& item)
+/** Make loader of the object from element. */
+template<typename T, typename Constructor>
+default_loader
+<
+    T,
+    default_serialization_policy<T>,
+    Constructor
+> 
+from_element(T& item,
+             Constructor cons)
 {
-    return element_serializer<T,T>(item);
+    typedef default_serializer< T,
+                                default_serialization_policy<T>,
+                                Constructor > serializer;
+
+    return serializer(item, cons);
 }
 
+/** Make loader of the object from element. */
+template<typename T, typename Constructor, typename Policy>
+default_loader<T, Policy, Constructor> from_element(T& item,
+                                                    Constructor cons,
+                                                    Policy policy)
+{
+    return default_loader<T, Policy, Constructor>(item, cons, policy);
+}
+
+/** Make saver of the object to element */
+template<typename T>
+default_saver<T> to_element(T& item)
+{
+    return default_serializer<T>(item);
+}
+
+/** Make object-to-element serializer */
+template<typename T>
+default_serializer<T> as_element(T& item)
+{
+    return default_serializer<T>(item);
+}
+
+/** Make object-to-element serializer */
+template<typename T, typename Constructor>
+default_serializer
+<
+    T,
+    default_serialization_policy<T>,
+    Constructor
+> 
+from_element(T& item,
+             Constructor cons)
+{
+    typedef default_serializer< T,
+                                default_serialization_policy<T>,
+                                Constructor > serializer;
+
+    return serializer(item, cons);
+}
+
+/** Make object-to-element serializer */
+template<typename T, typename Constructor, typename Policy>
+default_serializer<T, Policy, Constructor> as_element(T& item,
+                                                      Constructor cons,
+                                                      Policy policy)
+{
+    return default_serializer<T, Policy, Constructor>(item, cons, policy);
+}
+
+//================================================== DERIVED ==================================================//
+
+/** Serialize object as derived if conversion succeeded. To enable work with proprietary pointers specialize
+ * convert_ptr helper template.
+ * @tparam Y - derived type.
+ * @see convert_ptr, default_serializer
+ */
 template<typename Y, typename T>
-element_serializer<T*,Y*> as_element_ptr(T*& item)
+default_serializer
+<
+    T,
+    dynamic_ptr_serialization_policy<T, typename convert_ptr<T, Y>::type>,
+    default_constructor<typename convert_ptr<T, Y>::type>
+> 
+as_element(T& item, 
+           typename convert_ptr<T, Y>::tag* toggle = 0)
 {
-    return element_serializer<T*,Y*>(item);
+    typedef default_serializer< T, 
+                                dynamic_ptr_serialization_policy<T, typename convert_ptr<T, Y>::type>,
+                                default_constructor<typename convert_ptr<T, Y>::type> > serializer;
+
+    return serializer(item);
 }
 
-template<typename Y, typename T>
-element_serializer< boost::shared_ptr<T>, boost::shared_ptr<Y> > as_element_ptr(boost::shared_ptr<T>& item)
+/** Serialize object as derived if conversion succeeded. To enable work with proprietary pointers specialize
+ * convert_ptr helper template.
+ * @tparam Y - derived type.
+ * @param cons - constructor for constructing objects for deserialization.
+ * @see convert_ptr, default_serializer
+ */
+template<typename Y, typename T, typename Constructor>
+default_serializer
+<
+    T, 
+    dynamic_ptr_serialization_policy<T, typename convert_ptr<T, Y>::type>,
+    Constructor
+> 
+as_element(T& item, 
+           Constructor cons,
+           typename convert_ptr<T, Y>::tag* toggle = 0)
 {
-    return element_serializer< boost::shared_ptr<T>, boost::shared_ptr<Y> >(item);
+    typedef default_serializer< T, 
+                                dynamic_ptr_serialization_policy<T, typename convert_ptr<T, Y>::type>,
+                                Constructor > serializer;
+
+    return serializer(item, cons);
 }
 
 } // namespace xmlpp

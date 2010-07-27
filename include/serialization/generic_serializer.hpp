@@ -9,28 +9,36 @@
 
 namespace xmlpp  {
 
-enum serialization_state
+/** Serialization state*/
+enum s_state
 {
-    SERIALIZATION_LOAD,
-    SERIALIZATION_SAVE
+    LOAD,
+    SAVE
 };
 
+/** Make save/load functions which call this->serialize(document, node, state) */
 #define XMLPP_SERIALIZATION_MERGE_MEMBER(Type, Document) \
-    void save(Document& d, xmlpp_holder_type& n) const { const_cast<Type*>(this)->serialize(d, n, xmlpp::SERIALIZATION_SAVE); }\
-    void load(const Document& d, const xmlpp_holder_type& n) { this->serialize(const_cast<Document&>(d), const_cast<xmlpp_holder_type&>(n), xmlpp::SERIALIZATION_LOAD); }
+    void save(Document& d, xmlpp_holder_type& n) const { const_cast<Type*>(this)->serialize(d, n, xmlpp::SAVE); }\
+    void load(const Document& d, const xmlpp_holder_type& n) { this->serialize(const_cast<Document&>(d), const_cast<xmlpp_holder_type&>(n), xmlpp::LOAD); }
 
+/** Make serialize function which calls this->load/this->save, dependent on serialization state */
 #define XMLPP_SERIALIZATION_SPLIT_MEMBER(Document) \
-    void serialize(Document& d, xmlpp_holder_type& n, xmlpp::serialization_state state)\
+    void serialize(Document& d, xmlpp_holder_type& n, xmlpp::s_state state)\
     {\
-        if (state == xmlpp::SERIALIZATION_LOAD) load(d, n);\
+        if (state == xmlpp::LOAD) load(d, n);\
         else save(d, n);\
     }
 
+/** Declare serialize(document, element, state) function and make save/load functions which calls this->serialize */
 #define XMLPP_ELEMENT_SERIALIZATION(Type, Document) \
-    void serialize(Document& d, xmlpp::element& e, xmlpp::serialization_state state);\
-    void save(Document& d, xmlpp::element& n) const { const_cast<Type*>(this)->serialize(d, n, xmlpp::SERIALIZATION_SAVE); }\
-    void load(const Document& d, const xmlpp::element& n) { this->serialize(const_cast<Document&>(d), const_cast<xmlpp::element&>(n), xmlpp::SERIALIZATION_LOAD); }
+    void serialize(Document& d, xmlpp::element& e, xmlpp::s_state state);\
+    void save(Document& d, xmlpp::element& n) const { const_cast<Type*>(this)->serialize(d, n, xmlpp::SAVE); }\
+    void load(const Document& d, const xmlpp::element& n) { this->serialize(const_cast<Document&>(d), const_cast<xmlpp::element&>(n), xmlpp::LOAD); }
 
+/** Constructor of the holder for the serialization, e.g. element or attribute. 
+ * @tparam Serializer - type of the serialization for use with holder.
+ * @tparam Holder - type of the holder(element, attribute, ...) 
+ */
 template<typename Serializer, typename Holder>
 struct generic_holder;
 
@@ -56,7 +64,9 @@ struct generic_holder< name_value_pair<Serializer>, xmlpp::element >
     }
 };
 
-/** Generated loader & saver */
+/** Generated loader & saver. Main class for constructing parsers of the xml chunks.
+ * @tparam Document - type of the document for serialization, generally user specified or xmlpp::document.
+ */
 template<typename Document>
 class generic_serializer
 {
@@ -119,6 +129,7 @@ public:
         }
     }
 
+    /** Save to the element. */
     void save(Document& d, xmlpp_holder_type& e) const   
     {
         // save attributes
@@ -138,7 +149,7 @@ public:
         }
     }
 
-    /** Load fromt the document, ignore attributes */
+    /** Load from the document, ignore attributes */
     void load(const Document& d)   
     {
         // read elements
@@ -153,6 +164,7 @@ public:
         }
     }
 
+    /** Load from the element */
     void load(const Document& d, const xmlpp_holder_type& e) 
     {
         // read attributes

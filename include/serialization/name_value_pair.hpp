@@ -62,6 +62,9 @@ public:
     serializer_type     serializer;
 };
 
+/** Make pair of name and serializer. Dependent on the serializer name would be used to
+ * to search corresponding element or attribute.
+ */
 template<typename Serializer>
 name_value_pair<Serializer> make_nvp(const std::string& name, const Serializer& serializer)
 {
