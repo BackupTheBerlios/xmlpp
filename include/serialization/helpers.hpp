@@ -124,8 +124,8 @@ struct default_serialization_policy
         obj.load(d, e);
     }
 
-    template<typename Document, typename Holder>
-    void save(Document& d, Holder& e, const T& obj) const
+    template<typename Document>
+    void save(Document& d, xmlpp_holder_type& e, const T& obj) const
     {
         obj.save(d, e);
     }
@@ -324,7 +324,6 @@ public:
     explicit default_saver( T&      obj_, 
                             Policy  policy_ = Policy() ) :
         obj(obj_),
-        cons(cons_),
         policy(policy_)
     {}
 

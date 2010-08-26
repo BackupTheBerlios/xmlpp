@@ -96,7 +96,8 @@ private:
         void save(Document& d, xmlpp::node& parent) const       
         {
             generic_holder<Serializer, Holder> holder;
-            serializer.save( d, holder(serializer, parent) ); 
+            Holder h = holder(serializer, parent);
+            serializer.save(d, h);
         }
 
         void load(const Document& d, const Holder& n) { serializer.load(d, n); }
@@ -201,7 +202,7 @@ public:
         typedef boost::shared_ptr<nvp_wrapper>                      nvp_wrapper_ptr;
         
         nvp_wrapper_ptr nvpClone( new nvp_wrapper(nvp) );
-        if ( !attributeSerializers.insert( attribute_serializer_map::value_type(nvp.name, nvpClone) ).second ) {
+        if ( !attributeSerializers.insert( typename attribute_serializer_map::value_type(nvp.name, nvpClone) ).second ) {
             throw std::logic_error("Can't insert two serializers with same name");
         }
     }
@@ -213,7 +214,7 @@ public:
         typedef boost::shared_ptr<nvp_wrapper>                      nvp_wrapper_ptr;
         
         nvp_wrapper_ptr nvpClone( new nvp_wrapper(nvp) );
-        if ( !elementSerializers.insert( element_serializer_map::value_type(nvp.name, nvpClone) ).second ) {
+        if ( !elementSerializers.insert( typename element_serializer_map::value_type(nvp.name, nvpClone) ).second ) {
             throw std::logic_error("Can't insert two serializers with same name");
         }
     }

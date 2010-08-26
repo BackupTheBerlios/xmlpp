@@ -8,7 +8,7 @@
 namespace xmlpp {
 
 template< typename OutIterator,
-          typename ValueType = iterator_traits<OutIterator>::value_type,
+          typename ValueType = typename iterator_traits<OutIterator>::value_type,
           typename Policy = default_serialization_policy<ValueType>,
           typename Constructor = default_constructor<ValueType> >
 class container_loader
@@ -42,6 +42,7 @@ public:
 };
 
 template<typename InIterator, 
+         typename ValueType = typename iterator_traits<InIterator>::value_type,
          typename Policy = default_serialization_policy<ValueType> >
 class container_saver
 {
@@ -264,7 +265,7 @@ public:
     template<typename Document>
     void load(const Document& d, const xmlpp_holder_type& e)
     {
-        istringstream ss( e.get_text() );
+        std::istringstream ss( e.get_text() );
         while ( !ss.eof() ) 
         {
             ValueType val = constructor();
@@ -322,7 +323,7 @@ template<typename Container>
 container_to_string<typename Container::const_iterator> to_string(const Container& values, 
                                                                   typename enable_for_container<Container>::tag* toggle = 0)
 {
-    return container_to_string<Container::const_iterator>( values.begin(), values.end() );
+    return container_to_string<typename Container::const_iterator>( values.begin(), values.end() );
 }
 
 /** Make loader, reading from the string using std::istringstream::operator >>
@@ -336,7 +337,7 @@ container_from_string
 > 
 from_string(OutIterator out)
 {
-    return container_from_string<OutIterator, ValueType>(out);
+    return container_from_string<OutIterator, typename iterator_traits<OutIterator>::value_type>(out);
 }
 
 /** Make loader, reading from the string using std::istringstream::operator >>

@@ -11,6 +11,9 @@ namespace xmlpp  {
 template<typename Serializer>
 class name_value_pair;
 
+template<typename Document>
+class generic_serializer;
+
 // little generic
 struct nvp_list_end {};
 

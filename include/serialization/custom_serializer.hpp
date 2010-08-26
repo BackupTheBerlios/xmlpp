@@ -74,13 +74,13 @@ public:
     template<typename Document>
     void load(const Document& d, const xmlpp_holder_type& e)
     {
-        function(d, n, LOAD);
+        function(d, e, LOAD);
     }
 
     template<typename Document>
     void save(Document& d, xmlpp_holder_type& e) const
     {
-        function(d, n, SAVE);
+        function(d, e, SAVE);
     }
 
     template<typename Document>
