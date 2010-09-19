@@ -10,11 +10,13 @@ INCLUDE (StandartIncludes)
 #INCLUDE (Find3rdParty)
 
 # examples
-OPTION (BUILD_EXAMPLES "Set to ON to build examples. ")
-MESSAGE ("Build examples: " ${BUILD_EXAMPLES})
+IF (NOT XMLPP_CONFIGURE_INTRUSIVE)
+	OPTION (BUILD_EXAMPLES "Set to ON to build examples. ")
+	MESSAGE ("Build examples: " ${BUILD_EXAMPLES})
 
-OPTION (BUILD_TESTS "Set to ON to build tests. ")
-MESSAGE ("Build tests: " ${BUILD_TESTS})
+	OPTION (BUILD_TESTS "Set to ON to build tests. ")
+	MESSAGE ("Build tests: " ${BUILD_TESTS})
+ENDIF (NOT XMLPP_CONFIGURE_INTRUSIVE)
 
 # libraries 
 INCLUDE (FindNecessaryLibraries.cmake)
@@ -23,6 +25,6 @@ INCLUDE (FindNecessaryLibraries.cmake)
 LINK_DIRECTORIES ( ${PROJECT_BINARY_DIR}/lib )
 
 INCLUDE_DIRECTORIES ( 
-	${PROJECT_SOURCE_DIR}/include 
+	${PROJECT_SOURCE_DIR}/xml++ 
 	${Boost_INCLUDE_DIR}
 )
