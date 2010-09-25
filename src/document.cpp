@@ -21,7 +21,8 @@ document::~document()
 
 void document::set_source(const std::string& source)
 {
-    if ( !query_node()->Parse( source.c_str() ) ) {
+    query_node()->Parse( source.c_str() );
+    if ( query_node()->Error() ) {
         throw dom_error( string("Parse error: ") + query_node()->ErrorDesc() );
     }
     this->on_load();
