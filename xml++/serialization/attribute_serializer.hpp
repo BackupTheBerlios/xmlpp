@@ -63,7 +63,7 @@ default_saver
     T,
     attribute_serialization_policy<T>
 > 
-to_attribute(T& item)
+to_attribute(const T& item)
 {
     typedef default_saver< T,
                            attribute_serialization_policy<T> > serializer;

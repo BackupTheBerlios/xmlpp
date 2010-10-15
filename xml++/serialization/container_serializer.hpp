@@ -6,6 +6,9 @@
 #include "text_serializer.hpp"
 
 namespace xmlpp {
+	
+#define ENABLE_IF_CONTAINER(Container)	typename boost::enable_if< is_container<Container> >::type* Container##tag = 0
+#define ENABLE_IF_ITERATOR(Iterator)	typename boost::enable_if< is_iterator<Iterator> >::type* Iterator##tag = 0
 
 template< typename OutIterator,
           typename ValueType = typename iterator_traits<OutIterator>::value_type,
@@ -159,7 +162,7 @@ struct generic_holder< name_value_pair< container_saver<InIterator,
             {
                 element child(nvp.name);
                 if ( nvp.serializer.policy.valid(*iter) ) {
-                    add_child(parent, first);
+                    add_child(parent, child);
                 }
             }
 
@@ -194,25 +197,24 @@ struct generic_holder< name_value_pair< container_serializer<InIterator,
         {
             InIterator iter = nvp.serializer.firstIter;
 
-            // remember first child
-            element first(nvp.name);
-            if ( nvp.serializer.policy.valid(*iter++) ) {
-                add_child(parent, first);
-            }
-
             // allocate children for every object in the sequence
+            element first;
             for (; iter != nvp.serializer.endIter; ++iter)
             {
                 element child(nvp.name);
-                if ( nvp.serializer.policy.valid(*iter) ) {
+                if ( nvp.serializer.policy.valid(*iter) ) 
+				{
                     add_child(parent, child);
-                }
+					if ( !first.get_tixml_node() ) {
+						first = child;
+					}
+				}
             }
 
             return first;
         }
 
-        return element("null");
+        return element();
     }
 };
 
@@ -310,7 +312,9 @@ public:
  * @see enable_for_container
  */ 
 template<typename InIterator>
-container_to_string<InIterator> to_string(InIterator begin, InIterator end)
+container_to_string<InIterator> to_string( InIterator begin,
+										   InIterator end,
+										   ENABLE_IF_ITERATOR(InIterator) )
 {
     return container_to_string<InIterator>(begin, end);
 }
@@ -320,8 +324,8 @@ container_to_string<InIterator> to_string(InIterator begin, InIterator end)
  * @see enable_for_container
  */ 
 template<typename Container>
-container_to_string<typename Container::const_iterator> to_string(const Container& values, 
-                                                                  typename enable_for_container<Container>::tag* toggle = 0)
+container_to_string<typename Container::const_iterator> to_string( const Container& values, 
+                                                                   ENABLE_IF_CONTAINER(Container) )
 {
     return container_to_string<typename Container::const_iterator>( values.begin(), values.end() );
 }
@@ -335,7 +339,8 @@ container_from_string
     OutIterator, 
     typename iterator_traits<OutIterator>::value_type
 > 
-from_string(OutIterator out)
+from_string_it( OutIterator out,
+				ENABLE_IF_ITERATOR(OutIterator) )
 {
     return container_from_string<OutIterator, typename iterator_traits<OutIterator>::value_type>(out);
 }
@@ -351,7 +356,9 @@ container_from_string
     typename iterator_traits<OutIterator>::value_type, 
     Constructor
 > 
-from_string(OutIterator out, Constructor cons)
+from_string( OutIterator out, 
+			 Constructor cons,
+			 ENABLE_IF_ITERATOR(OutIterator) )
 {
     return container_from_string<OutIterator, typename iterator_traits<OutIterator>::value_type, Constructor>(out, cons);
 }
@@ -366,8 +373,8 @@ container_from_string
     std::back_insert_iterator<Container>, 
     typename Container::value_type 
 > 
-from_string(Container& values, 
-            typename enable_for_container<Container>::tag* toggle = 0)
+from_string( Container& values, 
+             ENABLE_IF_CONTAINER(Container) )
 {
     return container_from_string< std::back_insert_iterator<Container>, typename Container::value_type >( std::back_inserter(values) );
 }
@@ -383,9 +390,9 @@ container_from_string
     typename Container::value_type,
     Constructor
 > 
-from_string(Container& values, 
-            Constructor cons, 
-            typename enable_for_container<Container>::tag* toggle = 0)
+from_string( Container& values, 
+             Constructor cons, 
+             ENABLE_IF_CONTAINER(Container) )
 {
     typedef container_from_string< std::back_insert_iterator<Container>, 
                                    typename Container::value_type,
@@ -408,7 +415,11 @@ container_as_string
     OutIterator, 
     typename iterator_traits<OutIterator>::value_type
 > 
-as_string(InIterator begin, InIterator end, OutIterator out)
+as_string( InIterator begin, 
+		   InIterator end, 
+		   OutIterator out,
+		   ENABLE_IF_ITERATOR(InIterator),
+		   ENABLE_IF_ITERATOR(OutIterator) )
 {
     return container_as_string<InIterator, OutIterator, typename iterator_traits<OutIterator>::value_type>(begin, end, out);
 }
@@ -430,7 +441,12 @@ container_as_string
     typename iterator_traits<OutIterator>::value_type, 
     Constructor
 > 
-as_string(InIterator begin, InIterator end, OutIterator out, Constructor cons)
+as_string( InIterator begin, 
+		   InIterator end, 
+		   OutIterator out, 
+		   Constructor cons,
+		   ENABLE_IF_ITERATOR(InIterator),
+		   ENABLE_IF_ITERATOR(OutIterator) )
 {
     typedef container_as_string< InIterator, 
                                  OutIterator, 
@@ -451,8 +467,8 @@ container_as_string
     std::back_insert_iterator<Container>, 
     typename Container::value_type 
 > 
-as_string(Container& values,
-          typename enable_for_container<Container>::tag* toggle = 0)
+as_string( Container& values,
+           ENABLE_IF_CONTAINER(Container) )
 {
     typedef container_as_string < typename Container::const_iterator, 
                                   std::back_insert_iterator<Container>, 
@@ -470,7 +486,8 @@ container_loader
     typename iterator_traits<OutIterator>::value_type,
     default_serialization_policy<typename iterator_traits<OutIterator>::value_type> 
 >
-from_element_set(OutIterator out)
+from_element_set( OutIterator out,
+				  ENABLE_IF_ITERATOR(OutIterator) )
 {
     typedef container_loader< OutIterator,
                               typename iterator_traits<OutIterator>::value_type,
@@ -479,19 +496,53 @@ from_element_set(OutIterator out)
     return serializer(out);
 }
 
+/** Make loader, loading container elements from corresponding xml elements.
+ * @tparam Container - container type. By default enabled for std::vector, std::list, std::deque. 
+ * @see enable_for_container
+ */ 
+template<typename Container>
+container_loader
+< 
+    std::back_insert_iterator<Container>,
+    typename Container::value_type,
+    default_serialization_policy<typename Container::value_type> 
+>
+from_element_set( Container& values,
+                  ENABLE_IF_CONTAINER(Container) )
+{
+    return from_element_set( std::back_inserter(values) );
+}
+
 template<typename InIterator>
 container_saver
 < 
     InIterator,  
     default_serialization_policy<typename iterator_traits<InIterator>::value_type> 
 >
-to_element_set(InIterator begin, 
-               InIterator end)
+to_element_set( InIterator begin, 
+                InIterator end,
+			    ENABLE_IF_ITERATOR(InIterator) )
 {
     typedef container_saver< InIterator,
                              default_serialization_policy<typename iterator_traits<InIterator>::value_type> > serializer;
 
     return serializer(begin, end);
+}
+
+/** Make saver, saving container elements to corresponding xml elements.
+ * @tparam Container - container type. By default enabled for std::vector, std::list, std::deque. 
+ * @see enable_for_container
+ */ 
+template<typename Container>
+container_saver
+< 
+    typename Container::iterator,
+    default_serialization_policy<typename Container::value_type> 
+>
+to_element_set( const Container& values,
+                ENABLE_IF_CONTAINER(Container) )
+{
+    return to_element_set( values.begin(), values.end() );
 }
 
 template<typename InIterator, typename OutIterator>
@@ -502,7 +553,11 @@ container_serializer
     typename iterator_traits<OutIterator>::value_type,
     default_serialization_policy<typename iterator_traits<OutIterator>::value_type> 
 >
-as_element_set(InIterator begin, InIterator end, OutIterator out)
+as_element_set( InIterator begin, 
+				InIterator end, 
+				OutIterator out,
+				ENABLE_IF_ITERATOR(InIterator),
+				ENABLE_IF_ITERATOR(OutIterator) )
 {
     typedef container_serializer< InIterator,
                                   OutIterator,
@@ -524,13 +579,13 @@ container_serializer
     typename Container::value_type,
     default_serialization_policy<typename Container::value_type> 
 >
-as_element_set(Container& values,
-               typename enable_for_container<Container>::tag* toggle = 0)
+as_element_set( Container& values,
+                ENABLE_IF_CONTAINER(Container) )
 {
     typedef container_serializer< typename Container::iterator,
-                                  std::back_insert_iterator<Container>,
-                                  typename Container::value_type,
-                                  default_serialization_policy<typename Container::value_type> > serializer;
+								  std::back_insert_iterator<Container>,
+								  typename Container::value_type,
+								  default_serialization_policy<typename Container::value_type> > serializer;
 
     return serializer( values.begin(), values.end(), std::back_inserter(values) );
 }
@@ -544,7 +599,8 @@ container_loader
     typename iterator_traits<OutIterator>::value_type,
     text_serialization_policy<typename iterator_traits<OutIterator>::value_type> 
 >
-from_text_set(OutIterator out)
+from_text_set( OutIterator out,
+			   ENABLE_IF_ITERATOR(OutIterator) )
 {
     typedef container_loader< OutIterator,
                               typename iterator_traits<OutIterator>::value_type,
@@ -559,7 +615,9 @@ container_saver
     InIterator,
     text_serialization_policy<typename iterator_traits<InIterator>::value_type> 
 >
-to_text_set(InIterator begin, InIterator end)
+to_text_set( InIterator begin, 
+			 InIterator end,
+			 ENABLE_IF_ITERATOR(InIterator) )
 {
     typedef container_saver< InIterator,
                              text_serialization_policy<typename InIterator::value_type> > serializer;
@@ -575,7 +633,11 @@ container_serializer
     typename iterator_traits<OutIterator>::value_type,
     text_serialization_policy<typename iterator_traits<OutIterator>::value_type> 
 >
-as_text_set(InIterator begin, InIterator end, OutIterator out)
+as_text_set( InIterator begin, 
+			 InIterator end, 
+			 OutIterator out,
+			 ENABLE_IF_ITERATOR(InIterator),
+			 ENABLE_IF_ITERATOR(OutIterator) )
 {
     typedef container_serializer< InIterator,
                                   OutIterator,
@@ -594,7 +656,7 @@ container_serializer
     text_serialization_policy<typename Container::value_type> 
 >
 as_text_set(Container& values,
-            typename enable_for_container<Container>::tag* toggle = 0)
+            ENABLE_IF_CONTAINER(Container))
 {
     typedef container_serializer< typename Container::iterator,
                                   std::back_insert_iterator<Container>,
@@ -605,6 +667,45 @@ as_text_set(Container& values,
 }
 
 //================================================== DERIVED ==================================================//
+
+template<typename Y, typename OutIterator>
+container_loader
+<
+    OutIterator,
+    typename iterator_traits<OutIterator>::value_type,
+    dynamic_ptr_serialization_policy<typename iterator_traits<OutIterator>::value_type, typename convert_ptr<typename iterator_traits<OutIterator>::value_type, Y>::type>,
+    default_constructor<typename convert_ptr<typename iterator_traits<OutIterator>::value_type, Y>::type>
+>
+from_element_set(OutIterator out,
+                 typename convert_ptr<typename iterator_traits<OutIterator>::value_type, Y>::tag* toggle = 0,
+			     ENABLE_IF_ITERATOR(OutIterator))
+{
+    typedef container_loader< OutIterator,
+                              typename iterator_traits<OutIterator>::value_type,
+                              dynamic_ptr_serialization_policy<typename iterator_traits<OutIterator>::value_type, typename convert_ptr<typename iterator_traits<OutIterator>::value_type, Y>::type>,
+                              default_constructor<typename convert_ptr<typename iterator_traits<OutIterator>::value_type, Y>::type>
+                             > serializer;
+
+    return serializer(out);
+}
+
+template<typename Y, typename InIterator>
+container_saver
+< 
+    InIterator,
+    dynamic_ptr_serialization_policy<typename iterator_traits<InIterator>::value_type, typename convert_ptr<typename iterator_traits<InIterator>::value_type, Y>::type>
+>
+to_element_set(InIterator begin, 
+               InIterator end,
+               typename convert_ptr<typename iterator_traits<InIterator>::value_type, Y>::tag* toggle = 0,
+			   ENABLE_IF_ITERATOR(InIterator))
+{
+    typedef container_saver< InIterator,
+                             dynamic_ptr_serialization_policy<typename iterator_traits<InIterator>::value_type, typename convert_ptr<typename iterator_traits<InIterator>::value_type, Y>::type>
+                           > serializer;
+
+    return serializer(begin, end);
+}
 
 template<typename Y, typename InIterator, typename OutIterator>
 container_serializer
@@ -618,7 +719,9 @@ container_serializer
 as_element_set(InIterator begin, 
                InIterator end, 
                OutIterator out,
-               typename convert_ptr<typename iterator_traits<OutIterator>::value_type, Y>::tag* toggle = 0)
+               typename convert_ptr<typename iterator_traits<OutIterator>::value_type, Y>::tag* toggle = 0,
+			   ENABLE_IF_ITERATOR(InIterator),
+			   ENABLE_IF_ITERATOR(OutIterator))
 {
     typedef container_serializer< InIterator,
                                   OutIterator,
@@ -631,6 +734,34 @@ as_element_set(InIterator begin,
 }
 
 template<typename Y, typename Container>
+container_saver
+< 
+    typename Container::iterator,
+    dynamic_ptr_serialization_policy<typename Container::value_type, typename convert_ptr<typename Container::value_type, Y>::type>
+>
+to_element_set(const Container& values,
+               ENABLE_IF_CONTAINER(Container),
+               typename convert_ptr<typename Container::value_type, Y>::tag* tag1 = 0)
+{
+    return to_element_set( values.begin(), values.end() );
+}
+
+template<typename Y, typename Container>
+container_loader
+< 
+    std::back_insert_iterator<Container>,
+    typename Container::value_type,
+    dynamic_ptr_serialization_policy<typename Container::value_type, typename convert_ptr<typename Container::value_type, Y>::type>,
+    default_constructor< typename convert_ptr<typename Container::value_type, Y>::type >
+>
+from_element_set(Container& values,
+                 ENABLE_IF_CONTAINER(Container),
+                 typename convert_ptr<typename Container::value_type, Y>::tag* tag1 = 0)
+{
+    return from_element_set( std::back_inserter(values) );
+}
+
+template<typename Y, typename Container>
 container_serializer
 < 
     typename Container::iterator,
@@ -640,18 +771,21 @@ container_serializer
     default_constructor< typename convert_ptr<typename Container::value_type, Y>::type >
 >
 as_element_set(Container& values,
-               typename enable_for_container<Container>::tag* tag0 = 0,
+               ENABLE_IF_CONTAINER(Container),
                typename convert_ptr<typename Container::value_type, Y>::tag* tag1 = 0)
 {
     typedef container_serializer< typename Container::iterator,
-                                  std::back_insert_iterator<Container>,
-                                  typename Container::value_type,
-                                  dynamic_ptr_serialization_policy<typename Container::value_type, typename convert_ptr<typename Container::value_type, Y>::type>,
-                                  default_constructor< typename convert_ptr<typename Container::value_type, Y>::type >
-                                > serializer;
+								  std::back_insert_iterator<Container>,
+								  typename Container::value_type,
+								  dynamic_ptr_serialization_policy<typename Container::value_type, typename convert_ptr<typename Container::value_type, Y>::type>,
+								  default_constructor< typename convert_ptr<typename Container::value_type, Y>::type >
+                                 > serializer;
 
     return serializer( values.begin(), values.end(), std::back_inserter(values) );
 }
+
+#undef ENABLE_IF_CONTAINER
+#undef ENABLE_IF_ITERATOR
 
 } // namespace xmlpp
 

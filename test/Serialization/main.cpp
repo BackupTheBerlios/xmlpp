@@ -339,3 +339,16 @@ BOOST_AUTO_TEST_CASE(serialization_test_1)
         }
     }
 }
+
+BOOST_AUTO_TEST_CASE(serialization_test_2)
+{
+	// check iterator traits
+	BOOST_CHECK( xmlpp::is_iterator<std::vector<int>::iterator>::value == true );
+	BOOST_CHECK( xmlpp::is_iterator<std::vector<float>::iterator>::value == true );
+	BOOST_CHECK( xmlpp::is_iterator<float*>::value == true );
+	BOOST_CHECK( xmlpp::is_iterator< std::back_insert_iterator<std::list<double> > >::value == true );
+	BOOST_CHECK( xmlpp::is_iterator<std::vector<float> >::value == false );
+	BOOST_CHECK( xmlpp::is_iterator<int>::value == false );
+	BOOST_CHECK( xmlpp::is_iterator<float>::value == false );
+	BOOST_CHECK( xmlpp::is_iterator<godzilla>::value == false );
+}

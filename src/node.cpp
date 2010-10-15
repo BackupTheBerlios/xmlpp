@@ -2,7 +2,8 @@
 
 namespace xmlpp {
 
-node::node() 
+node::node() :
+	tixmlNode(0)
 {
 }
 

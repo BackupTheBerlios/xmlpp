@@ -1,6 +1,7 @@
 #ifndef XMLPP_SERIALIZATION_HELPERS_HPP
 #define XMLPP_SERIALIZATION_HELPERS_HPP
 
+#include <boost/detail/is_incrementable.hpp>
 #include <iterator>
 
 // forward
@@ -68,22 +69,65 @@ struct convert_ptr< boost::intrusive_ptr<T>, Y >
  * If you want allow your container specialize template as follows:
  * \code
  * template<Args>
- * struct enable_for_container< YourContainer<Args> > { typedef void tag; };
+ * struct is_container< YourContainer<Args> > : public boost::true_type {};
  * \uncode
  * Container must have begin()/end() functions, support iterators and std::back_insert_iterator for
  * deserializing.
  */
 template<typename C>
-struct enable_for_container {};
+struct is_container : public boost::false_type {};
 
 template<typename T, typename A>
-struct enable_for_container< std::vector<T, A> > { typedef void tag; };
+struct is_container< std::vector<T, A> > : public boost::true_type {};
 
 template<typename T, typename A>
-struct enable_for_container< std::list<T, A> > { typedef void tag; };
+struct is_container< std::list<T, A> > : public boost::true_type {};
 
 template<typename T, typename A>
-struct enable_for_container< std::deque<T, A> > { typedef void tag; };
+struct is_container< std::deque<T, A> > : public boost::true_type {};
+
+/** Helper class used to allow functions to work with specified iterator.
+ * If you want allow work with your iterator specialize template as follows:
+ * \code
+ * template<YourIterator>
+ * struct is_iterator<YourIterator> : public boost::true_type {};
+ * \uncode
+ */
+template<typename Iterator>
+class is_iterator
+{
+private:
+	template <typename Signature, Signature> 
+	struct TypeCheck;
+
+	typedef char					Yes;
+	typedef struct { char foo[2]; }	No;
+
+	template<typename T>
+	static Yes has_increment(TypeCheck<T (T::*)(int), &T::operator++>*);
+
+	template<typename T>
+	static No  has_increment(...);
+
+public:
+	static const bool value = sizeof( has_increment<Iterator>(0) ) == sizeof(Yes);
+};
+
+template<typename T>
+class is_iterator<T*>
+{
+public:
+	static const bool value = true;
+};
+
+template<typename T>
+class is_iterator<const T*>
+{
+public:
+	static const bool value = true;
+};
+
+#undef HAS_MEM_FUNC
 
 /** Helper class constructing elements of specified type for deserialization(usually pointers).
  * Specialize for your special types if needed.
@@ -321,8 +365,8 @@ public:
     typedef typename Policy::xmlpp_holder_type xmlpp_holder_type;
 
 public:
-    explicit default_saver( T&      obj_, 
-                            Policy  policy_ = Policy() ) :
+    explicit default_saver( const T&    obj_, 
+                            Policy		policy_ = Policy() ) :
         obj(obj_),
         policy(policy_)
     {}
@@ -340,8 +384,8 @@ public:
     bool valid() const { return policy.valid(obj); }
 
 private:
-    T&      obj;
-    Policy  policy;
+    const T&    obj;
+    Policy		policy;
 };
 
 /** class serializer/deserializes object to the element */
