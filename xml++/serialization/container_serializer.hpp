@@ -37,6 +37,12 @@ public:
         }
         (*outIter++) = value;
     }
+	
+	template<typename Document>
+    void save(Document& d, xmlpp_holder_type& e) const
+    {
+		assert(0);
+	}
 
 public:
     OutIterator outIter;
@@ -60,6 +66,12 @@ public:
         endIter(endIter_),
         policy(policy_)
     {}
+	
+	template<typename Document>
+    void load(const Document& d, const xmlpp_holder_type& e)
+    {
+		assert(0);
+	}
 
     template<typename Document>
     void save(Document& d, xmlpp_holder_type& e) const
@@ -151,18 +163,17 @@ struct generic_holder< name_value_pair< container_saver<InIterator,
         {
             InIterator iter = nvp.serializer.firstIter;
 
-            // remember first child
-            element first(nvp.name);
-            if ( nvp.serializer.policy.valid(*iter++) ) {
-                add_child(parent, first);
-            }
-
             // allocate children for every object in the sequence
+            element first;
             for (; iter != nvp.serializer.endIter; ++iter)
             {
                 element child(nvp.name);
-                if ( nvp.serializer.policy.valid(*iter) ) {
+                if ( nvp.serializer.policy.valid(*iter) ) 
+				{
                     add_child(parent, child);
+					if ( !first.get_tixml_node() ) {
+						first = child;
+					}
                 }
             }
 
@@ -510,13 +521,18 @@ container_loader
 from_element_set( Container& values,
                   ENABLE_IF_CONTAINER(Container) )
 {
-    return from_element_set( std::back_inserter(values) );
+    typedef container_loader< std::back_insert_iterator<Container>,
+                              typename Container::value_type,
+                              default_serialization_policy<typename Container::value_type> > serializer;
+
+    return serializer( std::back_inserter(values) );
 }
 
 template<typename InIterator>
 container_saver
 < 
     InIterator,  
+	typename iterator_traits<InIterator>::value_type,
     default_serialization_policy<typename iterator_traits<InIterator>::value_type> 
 >
 to_element_set( InIterator begin, 
@@ -536,13 +552,18 @@ to_element_set( InIterator begin,
 template<typename Container>
 container_saver
 < 
-    typename Container::iterator,
+    typename Container::const_iterator,
+	typename Container::value_type,
     default_serialization_policy<typename Container::value_type> 
 >
 to_element_set( const Container& values,
                 ENABLE_IF_CONTAINER(Container) )
 {
-    return to_element_set( values.begin(), values.end() );
+    typedef container_saver< typename Container::const_iterator,
+							 typename Container::value_type,
+                             default_serialization_policy<typename Container::value_type> > serializer;
+
+    return serializer( values.begin(), values.end() );
 }
 
 template<typename InIterator, typename OutIterator>
@@ -736,14 +757,18 @@ as_element_set(InIterator begin,
 template<typename Y, typename Container>
 container_saver
 < 
-    typename Container::iterator,
+    typename Container::const_iterator,
     dynamic_ptr_serialization_policy<typename Container::value_type, typename convert_ptr<typename Container::value_type, Y>::type>
 >
 to_element_set(const Container& values,
                ENABLE_IF_CONTAINER(Container),
                typename convert_ptr<typename Container::value_type, Y>::tag* tag1 = 0)
 {
-    return to_element_set( values.begin(), values.end() );
+    typedef container_saver< typename Container::const_iterator,
+                             dynamic_ptr_serialization_policy<typename Container::value_type, typename convert_ptr<typename Container::value_type, Y>::type>
+                           > serializer;
+
+    return serializer( values.begin(), values.end() );
 }
 
 template<typename Y, typename Container>
@@ -758,7 +783,13 @@ from_element_set(Container& values,
                  ENABLE_IF_CONTAINER(Container),
                  typename convert_ptr<typename Container::value_type, Y>::tag* tag1 = 0)
 {
-    return from_element_set( std::back_inserter(values) );
+    typedef container_loader< std::back_insert_iterator<Container>,
+                              typename Container::value_type,
+                              dynamic_ptr_serialization_policy<typename Container::value_type, typename convert_ptr<typename Container::value_type, Y>::type>,
+                              default_constructor< typename convert_ptr<typename Container::value_type, Y>::type >
+                             > serializer;
+
+    return serializer( std::back_inserter(values) );
 }
 
 template<typename Y, typename Container>

@@ -1,7 +1,6 @@
 #ifndef XMLPP_SERIALIZATION_HELPERS_HPP
 #define XMLPP_SERIALIZATION_HELPERS_HPP
 
-#include <boost/detail/is_incrementable.hpp>
 #include <iterator>
 
 // forward
@@ -307,9 +306,25 @@ struct dynamic_ptr_serialization_policy< boost::intrusive_ptr<T>, boost::intrusi
     bool valid(const boost::intrusive_ptr<T>& obj) const { return dynamic_cast<Y*>(obj.get()); }
 };
 
-/** Iterator traits. By default use std::iterator_traits */
+#pragma region iterator_traits
+
+template<typename Iter, bool IsIterator>
+struct iterator_traits_impl
+{
+private:
+	struct unknown_type;
+
+public:
+    typedef unknown_type iterator_category;
+	typedef unknown_type value_type;
+	typedef unknown_type difference_type;
+	typedef unknown_type distance_type;
+	typedef unknown_type pointer;
+	typedef unknown_type reference;
+};
+
 template<typename Iter>
-struct iterator_traits
+struct iterator_traits_impl<Iter, true>
 {
     typedef typename std::iterator_traits<Iter>::iterator_category      iterator_category;
 	typedef typename std::iterator_traits<Iter>::value_type             value_type;
@@ -318,6 +333,15 @@ struct iterator_traits
 	typedef typename std::iterator_traits<Iter>::pointer                pointer;
 	typedef typename std::iterator_traits<Iter>::reference              reference;
 };
+
+/** Iterator traits. By default use std::iterator_traits */
+template<typename Iter>
+struct iterator_traits :
+	public iterator_traits_impl<Iter, is_iterator<Iter>::value>
+{
+};
+
+#pragma endregion iterator_traits
 
 /** class serializer/deserializes object to the element */
 template< typename T,
@@ -346,6 +370,12 @@ public:
             policy.load(d, e, obj);
         }
     }
+	
+	template<typename Document>
+    void save(Document& d, xmlpp_holder_type& e) const 
+    {
+		assert(0);
+	}
 
     /** Check for validness */
     bool valid() const { return policy.valid(obj); }
@@ -370,6 +400,12 @@ public:
         obj(obj_),
         policy(policy_)
     {}
+	
+	template<typename Document>
+    void load(const Document& d, const xmlpp_holder_type& e) 
+    {
+		assert(0);
+	}
 
     /** serialize item into the element */
     template<typename Document>

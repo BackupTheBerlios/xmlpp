@@ -40,6 +40,43 @@ struct text_serialization_policy
 };
 
 template<typename T>
+default_saver
+<
+    T, 
+    text_serialization_policy<T>
+> 
+to_text(T& item)
+{
+    typedef default_saver< T, text_serialization_policy<T> > serializer;
+    return serializer(item);
+}
+
+template<typename T>
+default_loader
+<
+    T, 
+    text_serialization_policy<T>
+> 
+from_text(T& item)
+{
+    typedef default_loader< T, text_serialization_policy<T> > serializer;
+    return serializer(item);
+}
+
+template<typename T, typename Constructor>
+default_loader
+<
+    T, 
+    text_serialization_policy<T>,
+	Constructor
+> 
+from_text(T& item, Constructor cons)
+{
+    typedef default_loader<T, text_serialization_policy<T>, Constructor> serializer;
+    return serializer(item, cons);
+}
+
+template<typename T>
 default_serializer
 <
     T, 
@@ -62,8 +99,7 @@ default_serializer
     text_serialization_policy<T>,
     Constructor
 > 
-as_text(T& item,
-        Constructor cons)
+as_text(T& item, Constructor cons)
 {
     typedef default_serializer< T, 
                                 text_serialization_policy<T>,

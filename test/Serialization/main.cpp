@@ -105,6 +105,7 @@ struct superman
     XMLPP_SERIALIZATION_MERGE_MEMBER(superman, xmlpp::document)
 };
 
+// basic serialization test
 BOOST_AUTO_TEST_CASE(serialization_test_0)
 {
     superman sm[2];
@@ -250,6 +251,7 @@ struct godzilla :
     }
 };
 
+// check mostly container serialization
 BOOST_AUTO_TEST_CASE(serialization_test_1)
 {
     std::vector< boost::shared_ptr<monster> > foes[2];
@@ -340,15 +342,81 @@ BOOST_AUTO_TEST_CASE(serialization_test_1)
     }
 }
 
+struct helicopter
+{
+    void load( const xmlpp::document&    d,
+               const xmlpp::element&     n)
+    {
+        xmlpp::generic_serializer<xmlpp::document> serializer;
+        serializer &= xmlpp::make_nvp("name",			xmlpp::from_attribute(name));
+        serializer &= xmlpp::make_nvp("max_speed",      xmlpp::from_text(maxSpeed));
+        serializer &= xmlpp::make_nvp("mass",		    xmlpp::from_text(mass));
+        serializer &= xmlpp::make_nvp("max_passengers", xmlpp::from_text(maxPassengers));
+        serializer.load(d, n);
+    }
+
+    void save( xmlpp::document&    d,
+               xmlpp::element&     n) const
+    {
+        xmlpp::generic_serializer<xmlpp::document> serializer;
+        serializer &= xmlpp::make_nvp("name",			xmlpp::to_attribute(name));
+        serializer &= xmlpp::make_nvp("max_speed",      xmlpp::to_text(maxSpeed));
+        serializer &= xmlpp::make_nvp("mass",		    xmlpp::to_text(mass));
+        serializer &= xmlpp::make_nvp("max_passengers", xmlpp::to_text(maxPassengers));
+        serializer.save(d, n);
+    }
+	
+    bool operator == (const helicopter& rhs) const
+    {
+		return (name == rhs.name) && (maxSpeed == rhs.maxSpeed) && (mass == rhs.mass) && (maxPassengers == rhs.maxPassengers);
+	}
+
+	std::string name;
+	float		maxSpeed;
+	float		mass;
+	int			maxPassengers;
+};
+
+// test to/from serialization functions
 BOOST_AUTO_TEST_CASE(serialization_test_2)
 {
-	// check iterator traits
-	BOOST_CHECK( xmlpp::is_iterator<std::vector<int>::iterator>::value == true );
-	BOOST_CHECK( xmlpp::is_iterator<std::vector<float>::iterator>::value == true );
-	BOOST_CHECK( xmlpp::is_iterator<float*>::value == true );
-	BOOST_CHECK( xmlpp::is_iterator< std::back_insert_iterator<std::list<double> > >::value == true );
-	BOOST_CHECK( xmlpp::is_iterator<std::vector<float> >::value == false );
-	BOOST_CHECK( xmlpp::is_iterator<int>::value == false );
-	BOOST_CHECK( xmlpp::is_iterator<float>::value == false );
-	BOOST_CHECK( xmlpp::is_iterator<godzilla>::value == false );
+    std::vector<helicopter> helicopters[2];
+
+	helicopter ka50;
+	{
+		ka50.name			= "Ка-50";
+		ka50.maxSpeed       = 315.0f;
+		ka50.mass           = 7700.0f;
+		ka50.maxPassengers  = 1;
+	}
+	helicopters[0].push_back(ka50);
+    
+	helicopter mi8;
+	{
+		mi8.name		   = "Ми-8П";
+		mi8.maxSpeed       = 250.0f;
+		mi8.mass           = 7000.0f;
+		mi8.maxPassengers  = 31;
+	}
+	helicopters[0].push_back(mi8);
+
+    xmlpp::document document;
+    {
+        xmlpp::generic_serializer<xmlpp::document> serializer;
+        serializer &= xmlpp::make_nvp( "helicopters",   xmlpp::to_element_set(helicopters[0]) );
+        serializer.save(document);
+    }
+
+    document.get_tixml_document()->Print();
+
+    {
+        xmlpp::generic_serializer<xmlpp::document> serializer;
+        serializer &= xmlpp::make_nvp( "helicopters",   xmlpp::from_element_set(helicopters[1]) );
+        serializer.load(document);
+    }
+    
+    BOOST_CHECK_EQUAL( helicopters[0].size(), helicopters[1].size() );
+    for (size_t i = 0; i<helicopters[0].size(); ++i) {
+        BOOST_CHECK( helicopters[0][i] == helicopters[1][i] );
+    }
 }
