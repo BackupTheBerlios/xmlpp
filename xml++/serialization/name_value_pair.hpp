@@ -32,6 +32,18 @@ struct nvp_list
         rest(rest_)
     {
     }
+
+    template<typename Document>
+    void save(Document& d, xmlpp_holder_type& h) const   
+    {
+        unroll_nvp_and_save(*this, d, h);
+    }
+
+    template<typename Document>
+    void load(const Document& d, const xmlpp_holder_type& h) 
+    { 
+        unroll_nvp_and_load(*this, d, h);
+    }
 };
 
 template<typename Serializer>

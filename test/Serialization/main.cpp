@@ -108,6 +108,8 @@ struct superman
 // basic serialization test
 BOOST_AUTO_TEST_CASE(serialization_test_0)
 {
+	std::cout << "==================================== Test 0 ====================================" << std::endl;
+
     superman sm[2];
     sm[0].abilities.push_back( ability(ability::FLY, 0, 0, 0, 10) );
     sm[0].abilities.push_back( ability(ability::SUPER_STRIKE, 0, 10, 100, 10) );
@@ -254,6 +256,8 @@ struct godzilla :
 // check mostly container serialization
 BOOST_AUTO_TEST_CASE(serialization_test_1)
 {
+	std::cout << "==================================== Test 1 ====================================" << std::endl;
+
     std::vector< boost::shared_ptr<monster> > foes[2];
     
     {
@@ -347,22 +351,22 @@ struct helicopter
     void load( const xmlpp::document&    d,
                const xmlpp::element&     n)
     {
-        xmlpp::generic_serializer<xmlpp::document> serializer;
-        serializer &= xmlpp::make_nvp("name",			xmlpp::from_attribute(name));
-        serializer &= xmlpp::make_nvp("max_speed",      xmlpp::from_text(maxSpeed));
-        serializer &= xmlpp::make_nvp("mass",		    xmlpp::from_text(mass));
-        serializer &= xmlpp::make_nvp("max_passengers", xmlpp::from_text(maxPassengers));
+        xmlpp::generic_loader<xmlpp::document> serializer;
+        serializer >>= xmlpp::make_nvp("name",			 xmlpp::from_attribute(name));
+        serializer >>= xmlpp::make_nvp("max_speed",      xmlpp::from_text(maxSpeed));
+        serializer >>= xmlpp::make_nvp("mass",		     xmlpp::from_text(mass));
+        serializer >>= xmlpp::make_nvp("max_passengers", xmlpp::from_text(maxPassengers));
         serializer.load(d, n);
     }
 
     void save( xmlpp::document&    d,
                xmlpp::element&     n) const
     {
-        xmlpp::generic_serializer<xmlpp::document> serializer;
-        serializer &= xmlpp::make_nvp("name",			xmlpp::to_attribute(name));
-        serializer &= xmlpp::make_nvp("max_speed",      xmlpp::to_text(maxSpeed));
-        serializer &= xmlpp::make_nvp("mass",		    xmlpp::to_text(mass));
-        serializer &= xmlpp::make_nvp("max_passengers", xmlpp::to_text(maxPassengers));
+        xmlpp::generic_saver<xmlpp::document> serializer;
+        serializer <<= xmlpp::make_nvp("name",			 xmlpp::to_attribute(name));
+        serializer <<= xmlpp::make_nvp("max_speed",      xmlpp::to_text(maxSpeed));
+        serializer <<= xmlpp::make_nvp("mass",		     xmlpp::to_text(mass));
+        serializer <<= xmlpp::make_nvp("max_passengers", xmlpp::to_text(maxPassengers));
         serializer.save(d, n);
     }
 	
@@ -380,6 +384,8 @@ struct helicopter
 // test to/from serialization functions
 BOOST_AUTO_TEST_CASE(serialization_test_2)
 {
+	std::cout << "==================================== Test 2 ====================================" << std::endl;
+
     std::vector<helicopter> helicopters[2];
 
 	helicopter ka50;
@@ -402,8 +408,94 @@ BOOST_AUTO_TEST_CASE(serialization_test_2)
 
     xmlpp::document document;
     {
+        xmlpp::generic_saver<xmlpp::document> serializer;
+        serializer <<= xmlpp::make_nvp( "helicopters",   xmlpp::to_element_set(helicopters[0]) );
+        serializer.save(document);
+    }
+
+    document.get_tixml_document()->Print();
+
+    {
+        xmlpp::generic_loader<xmlpp::document> serializer;
+        serializer >>= xmlpp::make_nvp( "helicopters",   xmlpp::from_element_set(helicopters[1]) );
+        serializer.load(document);
+    }
+    
+    BOOST_CHECK_EQUAL( helicopters[0].size(), helicopters[1].size() );
+    for (size_t i = 0; i<helicopters[0].size(); ++i) {
+        BOOST_CHECK( helicopters[0][i] == helicopters[1][i] );
+    }
+}
+
+struct character
+{
+    void load( const xmlpp::document&    d,
+               const xmlpp::element&     n)
+    {
         xmlpp::generic_serializer<xmlpp::document> serializer;
-        serializer &= xmlpp::make_nvp( "helicopters",   xmlpp::to_element_set(helicopters[0]) );
+        serializer >>= xmlpp::make_nvp("name",				xmlpp::from_attribute(name));
+        serializer >>= xmlpp::make_nvp("hp",					xmlpp::from_text(hp));
+        serializer >>= xmlpp::make_nvp("mana",				xmlpp::from_text(mana));
+        serializer >>= xmlpp::make_nvp("running_speed",		xmlpp::from_text(runningSpeed));
+        serializer >>= xmlpp::make_nvp("carrying_weight",	xmlpp::from_text(carryingWeight));
+        serializer.load(d, n);
+    }
+
+    void save( xmlpp::document&    d,
+               xmlpp::element&     n) const
+    {
+        xmlpp::generic_serializer<xmlpp::document> serializer;
+        serializer <<= xmlpp::make_nvp("name",				xmlpp::to_attribute(name));
+        serializer <<= xmlpp::make_nvp("hp",					xmlpp::to_text(hp));
+        serializer <<= xmlpp::make_nvp("mana",				xmlpp::to_text(mana));
+        serializer <<= xmlpp::make_nvp("running_speed",		xmlpp::to_text(runningSpeed));
+        serializer <<= xmlpp::make_nvp("carrying_weight",	xmlpp::to_text(carryingWeight));
+        serializer.save(d, n);
+    }
+	
+    bool operator == (const character& rhs) const
+    {
+		return (name == rhs.name) && (hp == rhs.hp) && (mana == rhs.mana) && (runningSpeed == rhs.runningSpeed) && (carryingWeight == rhs.carryingWeight);
+	}
+
+	std::string name;
+	int			hp;
+	int			mana;
+	float		runningSpeed;
+	float		carryingWeight;
+};
+
+// test to/from serialization functions using generic_serializer and operator &=
+BOOST_AUTO_TEST_CASE(serialization_test_3)
+{
+	std::cout << "==================================== Test 3 ====================================" << std::endl;
+
+    std::vector<character> characters[2];
+
+	character mage;
+	{
+		mage.name			= "Gandalf";
+		mage.hp				= 150;
+		mage.mana			= 950;
+		mage.runningSpeed	= 3.5f;
+		mage.carryingWeight = 43.0f;
+	}
+	characters[0].push_back(mage);
+    
+	character barbarian;
+	{
+		barbarian.name			 = "Konan";
+		barbarian.hp			 = 750;
+		barbarian.mana			 = 0;
+		barbarian.runningSpeed	 = 6.5f;
+		barbarian.carryingWeight = 92.0f;
+	}
+	characters[0].push_back(barbarian);
+
+    xmlpp::document document;
+    {
+        xmlpp::generic_serializer<xmlpp::document> serializer;
+        serializer <<= xmlpp::make_nvp( "characters",   xmlpp::to_element_set(characters[0]) );
         serializer.save(document);
     }
 
@@ -411,12 +503,12 @@ BOOST_AUTO_TEST_CASE(serialization_test_2)
 
     {
         xmlpp::generic_serializer<xmlpp::document> serializer;
-        serializer &= xmlpp::make_nvp( "helicopters",   xmlpp::from_element_set(helicopters[1]) );
+        serializer >>= xmlpp::make_nvp( "characters",   xmlpp::from_element_set(characters[1]) );
         serializer.load(document);
     }
     
-    BOOST_CHECK_EQUAL( helicopters[0].size(), helicopters[1].size() );
-    for (size_t i = 0; i<helicopters[0].size(); ++i) {
-        BOOST_CHECK( helicopters[0][i] == helicopters[1][i] );
+    BOOST_CHECK_EQUAL( characters[0].size(), characters[1].size() );
+    for (size_t i = 0; i<characters[0].size(); ++i) {
+        BOOST_CHECK( characters[0][i] == characters[1][i] );
     }
 }

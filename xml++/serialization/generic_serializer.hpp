@@ -64,92 +64,79 @@ struct generic_holder< name_value_pair<Serializer>, xmlpp::element >
     }
 };
 
-/** Generated loader & saver. Main class for constructing parsers of the xml chunks.
+/** Trait class to determine whether serializer class has load function */
+HAS_XXX(load)
+template<typename T, typename Document, typename Holder>
+class is_loader :
+	public is_load_call_possible<T, void (Document, Holder)>
+{
+};
+
+/** Trait class to determine whether serializer class has save function */
+HAS_XXX(save)
+template<typename T, typename Document, typename Holder>
+class is_saver :
+	public is_save_call_possible<T, void (Document, Holder)>
+{
+};
+
+/** Trait class to determine whether serializer class has load & save function */
+template<typename T, typename Document, typename Holder>
+class is_serializer
+{
+public:
+	static const bool value = (is_loader<T, Document, Holder>::value && is_saver<T, Document, Holder>::value);
+};
+
+/** Generated loader. Main class for constructing parsers of the xml chunks.
  * @tparam Document - type of the document for serialization, generally user specified or xmlpp::document.
  */
 template<typename Document>
-class generic_serializer
+class generic_loader
 {
 public:
     typedef element xmlpp_holder_type;
 
 private:
     template<typename Holder>
-    class serializer
+    class loader
     {
     public:
-        virtual void save(Document&, xmlpp::node&) const = 0;
         virtual void load(const Document&, const Holder&) = 0;
 
-        virtual ~serializer() {}
+        virtual ~loader() {}
     };
 
-    template<typename Holder, typename Serializer>
-    class serializer_wrapper :
-        public serializer<Holder>
+    template<typename Holder, typename Loader>
+    class loader_wrapper :
+        public loader<Holder>
     {
     public:
-        serializer_wrapper(const Serializer& serializer_) :
-            serializer(serializer_)
+        loader_wrapper(const Loader& loader_) :
+            loader(loader_)
         {}
 
-        void save(Document& d, xmlpp::node& parent) const       
-        {
-            generic_holder<Serializer, Holder> holder;
-            Holder h = holder(serializer, parent);
-            serializer.save(d, h);
-        }
-
-        void load(const Document& d, const Holder& n) { serializer.load(d, n); }
+        void load(const Document& d, const Holder& n) 
+		{ 
+			loader.load(d, n); 
+		}
 
     public:
-        Serializer serializer;
+        Loader loader;
     };
 
 private:
-    typedef boost::shared_ptr< serializer<element> >            element_serializer_ptr;
-    typedef std::map<std::string, element_serializer_ptr>       element_serializer_map;
-    typedef typename element_serializer_map::iterator           element_serializer_iterator;
-    typedef typename element_serializer_map::const_iterator     element_serializer_const_iterator;
+    typedef boost::shared_ptr< loader<element> >			element_loader_ptr;
+    typedef std::map<std::string, element_loader_ptr>       element_loader_map;
+    typedef typename element_loader_map::iterator           element_loader_iterator;
+    typedef typename element_loader_map::const_iterator     element_loader_const_iterator;
 
-    typedef boost::shared_ptr< serializer<attribute> >          attribute_serializer_ptr;
-    typedef std::map<std::string, attribute_serializer_ptr>     attribute_serializer_map;
-    typedef typename attribute_serializer_map::iterator         attribute_serializer_iterator;
-    typedef typename attribute_serializer_map::const_iterator   attribute_serializer_const_iterator;
+    typedef boost::shared_ptr< loader<attribute> >			attribute_loader_ptr;
+    typedef std::map<std::string, attribute_loader_ptr>     attribute_loader_map;
+    typedef typename attribute_loader_map::iterator         attribute_loader_iterator;
+    typedef typename attribute_loader_map::const_iterator   attribute_loader_const_iterator;
 
 public:
-    /** Save to the document, ignore attributes */
-    void save(Document& d) const   
-    {
-        // save elements
-        for( element_serializer_const_iterator i  = elementSerializers.begin();
-                                               i != elementSerializers.end();
-                                               ++i )
-        {
-            i->second->save(d, d);
-        }
-    }
-
-    /** Save to the element. */
-    void save(Document& d, xmlpp_holder_type& e) const   
-    {
-        // save attributes
-        for( attribute_serializer_const_iterator i  = attributeSerializers.begin();
-                                                 i != attributeSerializers.end();
-                                                 ++i )
-        {
-            i->second->save(d, e);
-        }
-
-        // save elements
-        for( element_serializer_const_iterator i  = elementSerializers.begin();
-                                               i != elementSerializers.end();
-                                               ++i )
-        {
-            i->second->save(d, e);
-        }
-    }
-
     /** Load from the document, ignore attributes */
     void load(const Document& d)   
     {
@@ -158,8 +145,8 @@ public:
                                     i != d.end_child_element();
                                     ++i )
         {
-            element_serializer_iterator j = elementSerializers.find( i->get_value() );
-            if ( j != elementSerializers.end() ) {
+            element_loader_iterator j = elementLoaders.find( i->get_value() );
+            if ( j != elementLoaders.end() ) {
 				j->second->load(d, *i);
             }
         }
@@ -173,8 +160,8 @@ public:
                                                i != e.end_attribute();
                                                ++i )
         {
-            attribute_serializer_iterator j = attributeSerializers.find( i->get_name() );
-            if ( j != attributeSerializers.end() ) {
+            attribute_loader_iterator j = attributeLoaders.find( i->get_name() );
+            if ( j != attributeLoaders.end() ) {
 				j->second->load(d, *i);
             }
         }
@@ -184,8 +171,8 @@ public:
                                     i != e.end_child_element();
                                     ++i )
         {
-            element_serializer_iterator j = elementSerializers.find( i->get_value() );
-            if ( j != elementSerializers.end() ) {
+            element_loader_iterator j = elementLoaders.find( i->get_value() );
+            if ( j != elementLoaders.end() ) {
 				j->second->load(d, *i);
             }
         }
@@ -193,62 +180,263 @@ public:
 
     XMLPP_SERIALIZATION_SPLIT_MEMBER(Document)
 
-#define HOLDER_IS_CONVERTIBLE(To) typename boost::enable_if< boost::is_convertible<typename S::xmlpp_holder_type*, To*> >::type* tag = 0
+#define IS_LOADABLE_FROM(From) typename boost::enable_if< is_loader<S, Document, From> >::type* tag = 0
 
     template<typename S>
-    void attach( const name_value_pair<S>& nvp, HOLDER_IS_CONVERTIBLE(attribute) )
+    void attach_loader( const name_value_pair<S>& nvp, IS_LOADABLE_FROM(attribute) )
     {
-        typedef serializer_wrapper< attribute, name_value_pair<S> > nvp_wrapper;
-        typedef boost::shared_ptr<nvp_wrapper>                      nvp_wrapper_ptr;
+        typedef loader_wrapper< attribute, name_value_pair<S> > nvp_wrapper;
+        typedef boost::shared_ptr<nvp_wrapper>                  nvp_wrapper_ptr;
         
         nvp_wrapper_ptr nvpClone( new nvp_wrapper(nvp) );
-        if ( !attributeSerializers.insert( typename attribute_serializer_map::value_type(nvp.name, nvpClone) ).second ) {
+        if ( !attributeLoaders.insert( typename attribute_loader_map::value_type(nvp.name, nvpClone) ).second ) {
             throw std::logic_error("Can't insert two serializers with same name");
         }
     }
 
     template<typename S>
-    void attach( const name_value_pair<S>& nvp, HOLDER_IS_CONVERTIBLE(element) )
+    void attach_loader( const name_value_pair<S>& nvp, IS_LOADABLE_FROM(element) )
     {
-        typedef serializer_wrapper< element, name_value_pair<S> >   nvp_wrapper;
-        typedef boost::shared_ptr<nvp_wrapper>                      nvp_wrapper_ptr;
+        typedef loader_wrapper< element, name_value_pair<S> > nvp_wrapper;
+        typedef boost::shared_ptr<nvp_wrapper>                nvp_wrapper_ptr;
         
         nvp_wrapper_ptr nvpClone( new nvp_wrapper(nvp) );
-        if ( !elementSerializers.insert( typename element_serializer_map::value_type(nvp.name, nvpClone) ).second ) {
+        if ( !elementLoaders.insert( typename element_loader_map::value_type(nvp.name, nvpClone) ).second ) {
             throw std::logic_error("Can't insert two serializers with same name");
         }
     }
 
-#undef IS_CONVERTIBLE
+#undef IS_LOADABLE_FROM
+
+	generic_loader& operator >>= (const nvp_list_end&  /*nvpl*/)
+	{
+		return (*this);
+	}
+
+	template<typename S>
+	generic_loader& operator >>= (const name_value_pair<S>&   nvp)
+	{
+		attach_loader(nvp);
+		return (*this);
+	}
+
+	template<typename S, typename Rest>
+	generic_loader& operator >>= (const nvp_list<S, Rest>&   nvpl)
+	{
+		(*this) &= nvpl.nvp;
+		(*this) &= nvpl.rest;
+		return (*this);
+	}
 
 private:
-    attribute_serializer_map    attributeSerializers;
-    element_serializer_map      elementSerializers;
+    attribute_loader_map    attributeLoaders;
+    element_loader_map		elementLoaders;
 };
 
-template<typename D>
-generic_serializer<D>& operator &= (generic_serializer<D>&  gs, 
-                                    const nvp_list_end&     /*nvpl*/)
+/** Generated saver. Main class for constructing xml structure savers.
+ * @tparam Document - type of the document for serialization, generally user specified or xmlpp::document.
+ */
+template<typename Document>
+class generic_saver
 {
-    return gs;
-}
+public:
+    typedef element xmlpp_holder_type;
 
-template<typename D, typename S>
-generic_serializer<D>& operator &= (generic_serializer<D>&      gs, 
-                                    const name_value_pair<S>&   nvp)
-{
-    gs.attach(nvp);
-    return gs;
-}
+private:
+    template<typename Holder>
+    class saver
+    {
+    public:
+        virtual void save(Document&, xmlpp::node&) const = 0;
 
-template<typename D, typename S, typename Rest>
-generic_serializer<D>& operator &= (generic_serializer<D>&      gs, 
-                                    const nvp_list<S, Rest>&    nvpl)
+        virtual ~saver() {}
+    };
+
+    template<typename Holder, typename Saver>
+    class saver_wrapper :
+        public saver<Holder>
+    {
+    public:
+        saver_wrapper(const Saver& saver_) :
+            saver(saver_)
+        {}
+
+        void save(Document& d, xmlpp::node& parent) const       
+        {
+            generic_holder<Saver, Holder> holder;
+            Holder h = holder(saver, parent);
+            saver.save(d, h);
+        }
+
+    public:
+        Saver saver;
+    };
+
+private:
+    typedef boost::shared_ptr< saver<element> >				element_saver_ptr;
+    typedef std::map<std::string, element_saver_ptr>		element_saver_map;
+    typedef typename element_saver_map::iterator			element_saver_iterator;
+    typedef typename element_saver_map::const_iterator		element_saver_const_iterator;
+
+    typedef boost::shared_ptr< saver<attribute> >			attribute_saver_ptr;
+    typedef std::map<std::string, attribute_saver_ptr>		attribute_saver_map;
+    typedef typename attribute_saver_map::iterator			attribute_saver_iterator;
+    typedef typename attribute_saver_map::const_iterator	attribute_saver_const_iterator;
+
+public:
+    /** Save to the document, ignore attributes */
+    void save(Document& d) const   
+    {
+        // save elements
+        for( element_saver_const_iterator i  = elementSavers.begin();
+                                          i != elementSavers.end();
+                                          ++i )
+        {
+            i->second->save(d, d);
+        }
+    }
+
+    /** Save to the element. */
+    void save(Document& d, xmlpp_holder_type& e) const   
+    {
+        // save attributes
+        for( attribute_saver_const_iterator i  = attributeSavers.begin();
+                                            i != attributeSavers.end();
+                                            ++i )
+        {
+            i->second->save(d, e);
+        }
+
+        // save elements
+        for( element_saver_const_iterator i  = elementSavers.begin();
+                                          i != elementSavers.end();
+                                          ++i )
+        {
+            i->second->save(d, e);
+        }
+    }
+
+    XMLPP_SERIALIZATION_SPLIT_MEMBER(Document)
+
+#define IS_STORABLE_INTO(To) typename boost::enable_if< is_saver<S, Document, To> >::type* tag = 0
+
+    template<typename S>
+    void attach_saver( const name_value_pair<S>& nvp, IS_STORABLE_INTO(attribute) )
+    {
+        typedef saver_wrapper< attribute, name_value_pair<S> > nvp_wrapper;
+        typedef boost::shared_ptr<nvp_wrapper>                 nvp_wrapper_ptr;
+        
+        nvp_wrapper_ptr nvpClone( new nvp_wrapper(nvp) );
+        if ( !attributeSavers.insert( typename attribute_saver_map::value_type(nvp.name, nvpClone) ).second ) {
+            throw std::logic_error("Can't insert two savers with same name");
+        }
+    }
+
+    template<typename S>
+    void attach_saver( const name_value_pair<S>& nvp, IS_STORABLE_INTO(element) )
+    {
+        typedef saver_wrapper< element, name_value_pair<S> >   nvp_wrapper;
+        typedef boost::shared_ptr<nvp_wrapper>                 nvp_wrapper_ptr;
+        
+        nvp_wrapper_ptr nvpClone( new nvp_wrapper(nvp) );
+        if ( !elementSavers.insert( typename element_saver_map::value_type(nvp.name, nvpClone) ).second ) {
+            throw std::logic_error("Can't insert two savers with same name");
+        }
+    }
+
+#undef IS_STORABLE_INTO
+
+	generic_saver& operator <<= (const nvp_list_end&  /*nvpl*/)
+	{
+		return (*this);
+	}
+
+	template<typename S>
+	generic_saver& operator <<= (const name_value_pair<S>&   nvp)
+	{
+		attach_saver(nvp);
+		return (*this);
+	}
+
+	template<typename S, typename Rest>
+	generic_saver& operator <<= (const nvp_list<S, Rest>&   nvpl)
+	{
+		(*this) &= nvpl.nvp;
+		(*this) &= nvpl.rest;
+		return (*this);
+	}
+
+private:
+    attribute_saver_map    attributeSavers;
+    element_saver_map      elementSavers;
+};
+
+/** Generated loader & saver. Main class for constructing parsers of the xml chunks.
+ * @tparam Document - type of the document for serialization, generally user specified or xmlpp::document.
+ */
+template<typename Document>
+class generic_serializer :
+	public generic_loader<Document>,
+	public generic_saver<Document>
 {
-    gs &= nvpl.nvp;
-    gs &= nvpl.rest;
-    return gs;
-}
+public:
+    typedef element xmlpp_holder_type;
+
+private:
+	template<typename T, typename Document, typename Holder>
+	class has_serialize :
+		public generic_loader<Document>::has_load_function,
+		public generic_saver<Document>::has_save_function
+	{
+	private:
+		typedef typename generic_loader<Document>::has_load_function	has_load_function;
+		typedef typename generic_saver<Document>::has_save_function		has_save_function;
+
+	public:
+		static const bool value = (generic_loader<Document>::has_load_function::value && has_save_function::value);
+	};
+
+public:
+    XMLPP_SERIALIZATION_SPLIT_MEMBER(Document)
+
+#define IS_SERIALIZABLE(ToFrom) typename boost::enable_if< is_serializer<S, Document, ToFrom> >::type* tag = 0
+
+    template<typename S>
+    void attach( const name_value_pair<S>& nvp, IS_SERIALIZABLE(attribute) )
+    {
+        attach_loader(nvp);
+        attach_saver(nvp);
+    }
+
+    template<typename S>
+    void attach( const name_value_pair<S>& nvp, IS_SERIALIZABLE(element) )
+    {
+        attach_loader(nvp);
+        attach_saver(nvp);
+    }
+
+#undef IS_SERIALIZABLE
+
+	generic_serializer& operator &= (const nvp_list_end&  /*nvpl*/)
+	{
+		return (*this);
+	}
+
+	template<typename S>
+	generic_serializer& operator &= (const name_value_pair<S>&   nvp)
+	{
+		attach(nvp);
+		return (*this);
+	}
+
+	template<typename S, typename Rest>
+	generic_serializer& operator &= (const nvp_list<S, Rest>&   nvpl)
+	{
+		(*this) &= nvpl.nvp;
+		(*this) &= nvpl.rest;
+		return (*this);
+	}
+};
 
 } // namespace xmlpp
 

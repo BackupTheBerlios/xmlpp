@@ -5,7 +5,6 @@ SET (TARGET_HEADERS
 	${HEADER_PATH}/element.h
 	${HEADER_PATH}/iterators.hpp
 	${HEADER_PATH}/node.h
-	${HEADER_PATH}/parsers.hpp
 	${HEADER_PATH}/tinyxml.h
 )
 

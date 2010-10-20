@@ -85,6 +85,105 @@ struct is_container< std::list<T, A> > : public boost::true_type {};
 template<typename T, typename A>
 struct is_container< std::deque<T, A> > : public boost::true_type {};
 
+namespace details
+{
+    template <typename type>
+    class void_exp_result {};
+
+    template <typename type, typename U>
+    U const& operator,(U const&, void_exp_result<type>);
+
+    template <typename type, typename U>
+    U& operator,(U&, void_exp_result<type>);
+
+    template <typename src_type, typename dest_type>
+    struct clone_constness
+    {    
+        typedef dest_type type;
+    };
+
+    template <typename src_type, typename dest_type>
+    struct clone_constness<const src_type, dest_type>
+    {
+        typedef const dest_type type;
+    };
+}
+
+#define HAS_XXX(member)\
+template <typename Type>\
+class has_##member##\
+{\
+    class yes	{ char m; };\
+    class no	{ yes  m[2]; };\
+\
+    template <typename Signature, Signature> class test{};\
+\
+    struct base_xxx { void member(); };\
+    struct base : public Type, public base_xxx {};\
+\
+    template <typename U>\
+    static no  deduce(U*, test<void (base_xxx::*)(), &U::member>* = 0);\
+    static yes deduce(...);\
+\
+public:\
+    static const bool result = (sizeof(deduce((base*)0)) == sizeof(yes));\
+};\
+\
+template <typename type, typename call_details>\
+struct is_##member##_call_possible\
+{\
+private:\
+    class yes	{ char m; };\
+    class no	{ yes  m[2]; };\
+\
+    struct derived : public type\
+    {\
+        using type::member;\
+        no member(...) const;\
+    };\
+\
+    typedef typename details::clone_constness<type, derived>::type derived_type;\
+\
+    template <typename T, typename due_type>\
+    struct return_value_check\
+    {\
+        static yes deduce(due_type);\
+        static no  deduce(...);\
+        static no  deduce(no);\
+        static no  deduce(details::void_exp_result<type>);\
+    };\
+\
+    template <typename T>\
+    struct return_value_check<T, void>\
+    {\
+        static yes deduce(...);\
+        static no  deduce(no);\
+    };\
+\
+    template <bool has, typename F>\
+    struct impl\
+    {\
+        static const bool value = false;\
+    };\
+\
+    template <typename arg1, typename r>\
+    struct impl<true, r(arg1)>\
+    {\
+        static const bool value =\
+            sizeof(return_value_check<type, r>::deduce( (((derived_type*)0)->member(*(arg1*)0), details::void_exp_result<type>()))) == sizeof(yes);\
+    };\
+\
+    template <typename arg1, typename arg2, typename r>\
+    struct impl<true, r(arg1, arg2)>\
+    {\
+        static const bool value =\
+            sizeof(return_value_check<type, r>::deduce( (((derived_type*)0)->member(*(arg1*)0, *(arg2*)0), details::void_exp_result<type>()))) == sizeof(yes);\
+    };\
+\
+public:\
+	static const bool value = impl<has_##member##<type>::result, call_details>::value;\
+};
+
 /** Helper class used to allow functions to work with specified iterator.
  * If you want allow work with your iterator specialize template as follows:
  * \code
@@ -370,12 +469,6 @@ public:
             policy.load(d, e, obj);
         }
     }
-	
-	template<typename Document>
-    void save(Document& d, xmlpp_holder_type& e) const 
-    {
-		assert(0);
-	}
 
     /** Check for validness */
     bool valid() const { return policy.valid(obj); }
@@ -400,12 +493,6 @@ public:
         obj(obj_),
         policy(policy_)
     {}
-	
-	template<typename Document>
-    void load(const Document& d, const xmlpp_holder_type& e) 
-    {
-		assert(0);
-	}
 
     /** serialize item into the element */
     template<typename Document>

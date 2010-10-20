@@ -23,12 +23,6 @@ public:
         function(d, e);
     }
 
-    template<typename Document>
-    void save(Document&, xmlpp_holder_type&) const
-    {
-        assert(!"Not implemented");
-    }
-
 private:
     Function function;
 };
@@ -43,12 +37,6 @@ public:
     custom_saver(Function function_) :
         function(function_)
     {}
-
-    template<typename Document>
-    void load(const Document&, const xmlpp_holder_type&)
-    {
-        assert(!"Not implemented");
-    }
 
     template<typename Document>
     void save(Document& d, xmlpp_holder_type& e) const

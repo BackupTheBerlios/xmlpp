@@ -37,12 +37,6 @@ public:
         }
         (*outIter++) = value;
     }
-	
-	template<typename Document>
-    void save(Document& d, xmlpp_holder_type& e) const
-    {
-		assert(0);
-	}
 
 public:
     OutIterator outIter;
@@ -67,12 +61,6 @@ public:
         policy(policy_)
     {}
 	
-	template<typename Document>
-    void load(const Document& d, const xmlpp_holder_type& e)
-    {
-		assert(0);
-	}
-
     template<typename Document>
     void save(Document& d, xmlpp_holder_type& e) const
     {
