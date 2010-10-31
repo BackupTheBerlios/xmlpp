@@ -111,7 +111,7 @@ namespace details
 
 #define HAS_XXX(member)\
 template <typename Type>\
-class has_##member##\
+class has_##member\
 {\
     class yes	{ char m; };\
     class no	{ yes  m[2]; };\
@@ -181,7 +181,7 @@ private:\
     };\
 \
 public:\
-	static const bool value = impl<has_##member##<type>::result, call_details>::value;\
+    static const bool value = impl<has_##member <type>::result, call_details>::value;\
 };
 
 /** Helper class used to allow functions to work with specified iterator.

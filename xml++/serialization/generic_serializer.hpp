@@ -382,20 +382,6 @@ class generic_serializer :
 public:
     typedef element xmlpp_holder_type;
 
-private:
-	template<typename T, typename Document, typename Holder>
-	class has_serialize :
-		public generic_loader<Document>::has_load_function,
-		public generic_saver<Document>::has_save_function
-	{
-	private:
-		typedef typename generic_loader<Document>::has_load_function	has_load_function;
-		typedef typename generic_saver<Document>::has_save_function		has_save_function;
-
-	public:
-		static const bool value = (generic_loader<Document>::has_load_function::value && has_save_function::value);
-	};
-
 public:
     XMLPP_SERIALIZATION_SPLIT_MEMBER(Document)
 
