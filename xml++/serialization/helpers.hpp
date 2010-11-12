@@ -227,6 +227,11 @@ public:
 
 #undef HAS_MEM_FUNC
 
+
+/** Helper constructor which does nothing */
+template<typename T>
+struct disable_contructor {};
+
 /** Helper class constructing elements of specified type for deserialization(usually pointers).
  * Specialize for your special types if needed.
  */
@@ -480,6 +485,39 @@ private:
 };
 
 /** class serializer/deserializes object to the element */
+template<typename T, typename Policy>
+class default_loader< T, Policy, disable_contructor<T> >
+{
+public:
+    typedef typename Policy::xmlpp_holder_type xmlpp_holder_type;
+	typedef disable_contructor<T>			   constructor_type;
+
+public:
+    explicit default_loader( T&					obj_, 
+                             constructor_type	cons_ = constructor_type(),
+                             Policy				policy_ = Policy() ) :
+        obj(obj_),
+        policy(policy_)
+    {}
+
+    /** deserialize item from the element */
+    template<typename Document>
+    void load(const Document& d, const xmlpp_holder_type& e) 
+    { 
+        if ( policy.valid(obj) ) {
+            policy.load(d, e, obj);
+        }
+    }
+
+    /** Check for validness */
+    bool valid() const { return policy.valid(obj); }
+
+private:
+    T&          obj;
+    Policy      policy;
+};
+
+/** class serializer/deserializes object to the element */
 template< typename T, 
           typename Policy = default_serialization_policy<T> >
 class default_saver
@@ -554,6 +592,47 @@ public:
 private:
     T&          obj;
     Constructor cons;
+    Policy      policy;
+};
+
+/** class serializer/deserializes object to the element */
+template<typename T, typename Policy>
+class default_serializer< T, Policy, disable_contructor<T> >
+{
+public:
+    typedef typename Policy::xmlpp_holder_type xmlpp_holder_type;
+
+public:
+    explicit default_serializer( T&					   obj_, 
+                                 disable_contructor<T> cons_ = disable_contructor<T>(),
+                                 Policy				   policy_ = Policy() ) :
+        obj(obj_),
+        policy(policy_)
+    {}
+
+    /** deserialize item from the element */
+    template<typename Document>
+    void load(const Document& d, const xmlpp_holder_type& e) 
+    { 
+        if ( policy.valid(obj) ) {
+            policy.load(d, e, obj);
+        }
+    }
+
+    /** serialize item into the element */
+    template<typename Document>
+    void save(Document& d, xmlpp_holder_type& e) const 
+    { 
+        if ( policy.valid(obj) ) {
+            policy.save(d, e, obj);
+        }
+    }
+
+    /** Check for validness */
+    bool valid() const { return policy.valid(obj); }
+
+private:
+    T&          obj;
     Policy      policy;
 };
 

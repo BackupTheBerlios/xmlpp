@@ -131,6 +131,9 @@ public:
      */
     const_element_iterator end_child_element() const;
 
+	/** Remove all child nodes */
+	void clear();
+
     /** Compare nodes */
     bool operator == (const node& rhs) const;
 

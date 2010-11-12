@@ -5,14 +5,46 @@
 #include "helpers.hpp"
 #include <boost/intrusive_ptr.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/type_traits/has_trivial_assign.hpp>
+#include <boost/type_traits/has_trivial_constructor.hpp>
+#include <boost/utility/enable_if.hpp>
 
 namespace xmlpp {
+	
+/** Make object-to-element serializer */
+template<typename T>
+default_loader
+<
+	T,
+	default_serialization_policy<T>,
+	default_constructor<T>
+> 
+from_element(T& item,
+		     typename boost::enable_if< boost::has_trivial_assign<T> >::type* tag0 = 0,
+		     typename boost::enable_if< boost::has_trivial_constructor<T> >::type* tag1 = 0 )
+{
+    typedef default_loader< T,
+                            default_serialization_policy<T>,
+                            default_constructor<T> > loader;
+
+    return loader(item);
+}
 
 /** Make loader of the object from element. */
 template<typename T>
-default_loader<T> from_element(T& item)
+default_loader
+<
+	T,
+	default_serialization_policy<T>,
+	disable_contructor<T>
+> 
+from_element(T& item)
 {
-    return default_serializer<T>(item);
+    typedef default_loader< T,
+                            default_serialization_policy<T>,
+                            disable_contructor<T> > loader;
+
+    return loader(item);
 }
 
 /** Make loader of the object from element. */
@@ -51,9 +83,38 @@ default_saver<T> to_element(T& item)
 
 /** Make object-to-element serializer */
 template<typename T>
-default_serializer<T> as_element(T& item)
+default_serializer
+<
+	T,
+	default_serialization_policy<T>,
+	default_constructor<T>
+> 
+as_element(T& item,
+		   typename boost::enable_if< boost::has_trivial_assign<T> >::type* tag0 = 0,
+		   typename boost::enable_if< boost::has_trivial_constructor<T> >::type* tag1 = 0 )
 {
-    return default_serializer<T>(item);
+    typedef default_serializer< T,
+                                default_serialization_policy<T>,
+                                default_constructor<T> > serializer;
+
+    return serializer(item);
+}
+
+/** Make object-to-element serializer */
+template<typename T>
+default_serializer
+<
+	T,
+	default_serialization_policy<T>,
+	disable_contructor<T>
+> 
+as_element(T& item)
+{
+    typedef default_serializer< T,
+                                default_serialization_policy<T>,
+                                disable_contructor<T> > serializer;
+
+    return serializer(item);
 }
 
 /** Make object-to-element serializer */

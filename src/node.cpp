@@ -108,6 +108,12 @@ const_element_iterator node::end_child_element() const
     return const_element_iterator(NULL);
 }
 
+void node::clear()
+{
+    assert(tixmlNode);
+	tixmlNode->Clear();
+}
+
 bool node::operator == (const node& rhs) const
 {
     return tixmlNode == rhs.tixmlNode;

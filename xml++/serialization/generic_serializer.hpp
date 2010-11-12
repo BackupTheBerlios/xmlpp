@@ -22,8 +22,8 @@ enum s_state
     void load(const Document& d, const xmlpp_holder_type& n) { this->serialize(const_cast<Document&>(d), const_cast<xmlpp_holder_type&>(n), xmlpp::LOAD); }
 
 /** Make serialize function which calls this->load/this->save, dependent on serialization state */
-#define XMLPP_SERIALIZATION_SPLIT_MEMBER(Document) \
-    void serialize(Document& d, xmlpp_holder_type& n, xmlpp::s_state state)\
+#define XMLPP_SERIALIZATION_SPLIT_MEMBER(Document, Holder) \
+    void serialize(Document& d, Holder& n, xmlpp::s_state state)\
     {\
         if (state == xmlpp::LOAD) load(d, n);\
         else save(d, n);\
@@ -178,7 +178,13 @@ public:
         }
     }
 
-    XMLPP_SERIALIZATION_SPLIT_MEMBER(Document)
+	void clear()
+	{
+		attributeLoaders.clear();
+		elementLoaders.clear();
+	}
+
+    XMLPP_SERIALIZATION_SPLIT_MEMBER(Document, element)
 
 #define IS_LOADABLE_FROM(From) typename boost::enable_if< is_loader<S, Document, From> >::type* tag = 0
 
@@ -315,8 +321,14 @@ public:
             i->second->save(d, e);
         }
     }
+	
+	void clear()
+	{
+		attributeSavers.clear();
+		elementSavers.clear();
+	}
 
-    XMLPP_SERIALIZATION_SPLIT_MEMBER(Document)
+    XMLPP_SERIALIZATION_SPLIT_MEMBER(Document, element)
 
 #define IS_STORABLE_INTO(To) typename boost::enable_if< is_saver<S, Document, To> >::type* tag = 0
 
@@ -383,7 +395,13 @@ public:
     typedef element xmlpp_holder_type;
 
 public:
-    XMLPP_SERIALIZATION_SPLIT_MEMBER(Document)
+    XMLPP_SERIALIZATION_SPLIT_MEMBER(Document, element)
+
+	void clear()
+	{
+		generic_loader<Document>::clear();
+		generic_saver<Document>::clear();
+	}
 
 #define IS_SERIALIZABLE(ToFrom) typename boost::enable_if< is_serializer<S, Document, ToFrom> >::type* tag = 0
 

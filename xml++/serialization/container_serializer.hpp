@@ -266,6 +266,10 @@ public:
     template<typename Document>
     void load(const Document& d, const xmlpp_holder_type& e)
     {
+		if ( e.get_text().empty() ) {
+			return;
+		}
+
         std::istringstream ss( e.get_text() );
         while ( !ss.eof() ) 
         {
