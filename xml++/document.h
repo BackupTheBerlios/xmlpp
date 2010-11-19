@@ -36,9 +36,10 @@ public:
     virtual ~document();
 
     /** Set document source
-     * @param source - string containing xml file
+	 * @param size - size of the source.
+     * @param source - string containing xml file.
      */
-    void set_source(const std::string& source);
+    void set_source(size_t size, const char* source);
 
     /** Set document source
      * TODO: Split file errors & dom errors

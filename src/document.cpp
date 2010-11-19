@@ -19,9 +19,9 @@ document::~document()
     delete tixmlNode;
 }
 
-void document::set_source(const std::string& source)
+void document::set_source(size_t size, const char* source)
 {
-    query_node()->Parse( source.c_str() );
+    query_node()->Parse(source);
     if ( query_node()->Error() ) {
         throw dom_error( string("Parse error: ") + query_node()->ErrorDesc() );
     }
