@@ -32,7 +32,7 @@ public:
     void load(const Document& d, const xmlpp_holder_type& e)
     {
         ValueType value = constructor();
-        if ( policy.valid(value) ) {
+        if ( policy.valid(value, LOAD) ) {
             policy.load(d, e, value);
         }
         (*outIter++) = value;
@@ -69,7 +69,7 @@ public:
                         iter != endIter;
                         ++iter)
         {
-            if ( policy.valid(*iter) ) {
+            if ( policy.valid(*iter, SAVE) ) {
                 policy.save(d, *holder++, *iter);
             }
         }
@@ -108,7 +108,7 @@ public:
     void load(const Document& d, const xmlpp_holder_type& e)
     {
         ValueType value = constructor();
-        if ( policy.valid(value) ) {
+        if ( policy.valid(value, LOAD) ) {
             policy.load(d, e, value);
         }
         (*outIter++) = value;
@@ -122,7 +122,7 @@ public:
                         iter != endIter;
                         ++iter)
         {
-            if ( policy.valid(*iter) ) {
+            if ( policy.valid(*iter, SAVE) ) {
                 policy.save(d, *holder++, *iter);
             }
         }
@@ -156,7 +156,7 @@ struct generic_holder< name_value_pair< container_saver<InIterator,
             for (; iter != nvp.serializer.endIter; ++iter)
             {
                 element child(nvp.name);
-                if ( nvp.serializer.policy.valid(*iter) ) 
+                if ( nvp.serializer.policy.valid(*iter, SAVE) ) 
 				{
                     add_child(parent, child);
 					if ( !first.get_tixml_node() ) {
@@ -201,7 +201,7 @@ struct generic_holder< name_value_pair< container_serializer<InIterator,
             for (; iter != nvp.serializer.endIter; ++iter)
             {
                 element child(nvp.name);
-                if ( nvp.serializer.policy.valid(*iter) ) 
+                if ( nvp.serializer.policy.valid(*iter, SAVE) ) 
 				{
                     add_child(parent, child);
 					if ( !first.get_tixml_node() ) {

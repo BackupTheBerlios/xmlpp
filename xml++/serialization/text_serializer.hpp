@@ -36,7 +36,7 @@ struct text_serialization_policy
         e.set_text( ss.str() );
     }
 
-    bool valid(const T&) const { return true; }
+    bool valid(const T&, s_state) const { return true; }
 };
 
 template<typename T>

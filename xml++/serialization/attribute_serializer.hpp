@@ -36,7 +36,7 @@ struct attribute_serialization_policy
         a.set_value( ss.str() );
     }
 
-    bool valid(const T&) const { return true; }
+    bool valid(const T&, xmlpp::s_state) const { return true; }
 };
 
 /** Make attribute loader */

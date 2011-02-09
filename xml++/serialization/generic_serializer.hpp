@@ -9,13 +9,6 @@
 
 namespace xmlpp  {
 
-/** Serialization state*/
-enum s_state
-{
-    LOAD,
-    SAVE
-};
-
 /** Make save/load functions which call this->serialize(document, node, state) */
 #define XMLPP_SERIALIZATION_MERGE_MEMBER(Type, Document) \
     void save(Document& d, xmlpp_holder_type& n) const { const_cast<Type*>(this)->serialize(d, n, xmlpp::SAVE); }\

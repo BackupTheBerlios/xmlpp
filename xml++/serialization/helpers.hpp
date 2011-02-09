@@ -27,6 +27,13 @@ namespace std
 
 namespace xmlpp {
 
+/** Serialization state*/
+enum s_state
+{
+    LOAD,
+    SAVE
+};
+
 /** Helper class for wrapping type with template.
  * For example, see specialization for boost::shared_ptr:
  * \code
@@ -277,7 +284,7 @@ struct default_serialization_policy
         obj.save(d, e);
     }
 
-    bool valid(const T&) const { return true; }
+    bool valid(const T&, xmlpp::s_state) const { return true; }
 };
 
 template<typename T, typename Holder>
@@ -299,7 +306,7 @@ struct default_serialization_policy<T*, Holder>
         obj->save(d, e);
     }
 
-    bool valid(const T* obj) const { return (bool)obj; }
+    bool valid(const T* obj, s_state) const { return (bool)obj; }
 };
 
 template<typename T, typename Holder>
@@ -321,7 +328,7 @@ struct default_serialization_policy< boost::shared_ptr<T>, Holder >
         obj->save(d, e);
     }
 
-    bool valid(const boost::shared_ptr<T>& obj) const { return (bool)obj; }
+    bool valid(const boost::shared_ptr<T>& obj, s_state) const { return (bool)obj; }
 };
 
 template<typename T, typename Holder>
@@ -343,7 +350,7 @@ struct default_serialization_policy< boost::intrusive_ptr<T>, Holder >
         obj->save(d, e);
     }
 
-    bool valid(const boost::intrusive_ptr<T>& obj) const { return (bool)obj; }
+    bool valid(const boost::intrusive_ptr<T>& obj, s_state) const { return (bool)obj; }
 };
 
 /** Policy for serializing pointers to objects with dynamic type check. */
@@ -367,7 +374,7 @@ struct dynamic_ptr_serialization_policy<T*, Y*>
         static_cast<Y*>(obj)->save(d, e);
     }
 
-    bool valid(const T* obj) const { return dynamic_cast<Y*>(obj); }
+    bool valid(const T* obj, s_state) const { return dynamic_cast<Y*>(obj); }
 };
 
 template<typename T, typename Y>
@@ -387,7 +394,7 @@ struct dynamic_ptr_serialization_policy< boost::shared_ptr<T>, boost::shared_ptr
         static_cast<Y&>(*obj).save(d, e);
     }
 
-    bool valid(const boost::shared_ptr<T>& obj) const { return (bool)boost::shared_dynamic_cast<Y>(obj); }
+    bool valid(const boost::shared_ptr<T>& obj, s_state) const { return (bool)boost::shared_dynamic_cast<Y>(obj); }
 };
 
 template<typename T, typename Y>
@@ -407,7 +414,7 @@ struct dynamic_ptr_serialization_policy< boost::intrusive_ptr<T>, boost::intrusi
         static_cast<Y&>(*obj).save(d, e);
     }
 
-    bool valid(const boost::intrusive_ptr<T>& obj) const { return dynamic_cast<Y*>(obj.get()); }
+    bool valid(const boost::intrusive_ptr<T>& obj, s_state) const { return dynamic_cast<Y*>(obj.get()); }
 };
 
 #pragma region iterator_traits
@@ -470,13 +477,13 @@ public:
     void load(const Document& d, const xmlpp_holder_type& e) 
     { 
         obj = cons();
-        if ( policy.valid(obj) ) {
+        if ( policy.valid(obj, LOAD) ) {
             policy.load(d, e, obj);
         }
     }
 
     /** Check for validness */
-    bool valid() const { return policy.valid(obj); }
+    bool valid() const { return policy.valid(obj, LOAD); }
 
 private:
     T&          obj;
@@ -504,13 +511,13 @@ public:
     template<typename Document>
     void load(const Document& d, const xmlpp_holder_type& e) 
     { 
-        if ( policy.valid(obj) ) {
+        if ( policy.valid(obj, LOAD) ) {
             policy.load(d, e, obj);
         }
     }
 
     /** Check for validness */
-    bool valid() const { return policy.valid(obj); }
+    bool valid() const { return policy.valid(obj, LOAD); }
 
 private:
     T&          obj;
@@ -536,13 +543,13 @@ public:
     template<typename Document>
     void save(Document& d, xmlpp_holder_type& e) const 
     { 
-        if ( policy.valid(obj) ) {
+        if ( policy.valid(obj, SAVE) ) {
             policy.save(d, e, obj);
         }
     }
 
     /** Check for validness */
-    bool valid() const { return policy.valid(obj); }
+    bool valid() const { return policy.valid(obj, SAVE); }
 
 private:
     const T&    obj;
@@ -572,7 +579,7 @@ public:
     void load(const Document& d, const xmlpp_holder_type& e) 
     { 
         obj = cons();
-        if ( policy.valid(obj) ) {
+        if ( policy.valid(obj, LOAD) ) {
             policy.load(d, e, obj);
         }
     }
@@ -581,13 +588,13 @@ public:
     template<typename Document>
     void save(Document& d, xmlpp_holder_type& e) const 
     { 
-        if ( policy.valid(obj) ) {
+        if ( policy.valid(obj, SAVE) ) {
             policy.save(d, e, obj);
         }
     }
 
     /** Check for validness */
-    bool valid() const { return policy.valid(obj); }
+    bool valid(s_state s) const { return policy.valid(obj, s); }
 
 private:
     T&          obj;
@@ -614,7 +621,7 @@ public:
     template<typename Document>
     void load(const Document& d, const xmlpp_holder_type& e) 
     { 
-        if ( policy.valid(obj) ) {
+        if ( policy.valid(obj, LOAD) ) {
             policy.load(d, e, obj);
         }
     }
@@ -623,13 +630,13 @@ public:
     template<typename Document>
     void save(Document& d, xmlpp_holder_type& e) const 
     { 
-        if ( policy.valid(obj) ) {
+        if ( policy.valid(obj, SAVE) ) {
             policy.save(d, e, obj);
         }
     }
 
     /** Check for validness */
-    bool valid() const { return policy.valid(obj); }
+    bool valid(s_state s) const { return policy.valid(obj, s); }
 
 private:
     T&          obj;
