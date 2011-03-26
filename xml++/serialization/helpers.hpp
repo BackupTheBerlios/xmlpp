@@ -417,8 +417,6 @@ struct dynamic_ptr_serialization_policy< boost::intrusive_ptr<T>, boost::intrusi
     bool valid(const boost::intrusive_ptr<T>& obj, s_state) const { return dynamic_cast<Y*>(obj.get()); }
 };
 
-#pragma region iterator_traits
-
 template<typename Iter, bool IsIterator>
 struct iterator_traits_impl
 {
@@ -451,8 +449,6 @@ struct iterator_traits :
 	public iterator_traits_impl<Iter, is_iterator<Iter>::value>
 {
 };
-
-#pragma endregion iterator_traits
 
 /** class serializer/deserializes object to the element */
 template< typename T,
