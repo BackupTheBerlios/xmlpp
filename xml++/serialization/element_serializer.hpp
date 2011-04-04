@@ -10,14 +10,129 @@
 #include <boost/utility/enable_if.hpp>
 
 namespace xmlpp {
-	
+
+//================================================== CUSTOM ==================================================//
+
+/** Make object-to-element serializer */
+template<typename T, typename Policy>
+default_loader
+<
+	T,
+	Policy,
+	disable_contructor<T>
+> 
+from_element_ex(T& item,
+                Policy policy,
+		        typename boost::enable_if< boost::has_trivial_assign<T> >::type* tag0 = 0,
+		        typename boost::enable_if< boost::has_trivial_constructor<T> >::type* tag1 = 0 )
+{
+    typedef default_loader< T,
+                            default_serialization_policy<T>,
+                            Policy > loader;
+
+    return loader(item, loader::constructor_type(), policy);
+}
+
+/** Make loader of the object from element. */
+template<typename T, typename Policy>
+default_loader
+<
+	T,
+	Policy,
+	default_constructor<T>
+> 
+from_element_ex(T& item,
+                Policy policy)
+{
+    typedef default_loader< T,
+                            Policy,
+                            default_constructor<T> > loader;
+
+    return loader(item, loader::contructor_type(), policy);
+}
+
+/** Make loader of the object from element. */
+template<typename T, typename Constructor, typename Policy>
+default_loader
+<
+    T,
+    Policy,
+    Constructor
+> 
+from_element_ex(T& item,
+                Constructor cons,
+                Policy policy)
+{
+    typedef default_serializer< T,
+                                Policy,
+                                Constructor > serializer;
+
+    return serializer(item, cons, policy);
+}
+
+/** Make saver of the object to element */
+template<typename T, typename Policy>
+default_saver<T, Policy> to_element_ex(T& item, Policy policy)
+{
+    return default_serializer<T, Policy>(item, policy);
+}
+
+/** Make object-to-element serializer */
+template<typename T, typename Policy>
+default_serializer
+<
+	T,
+	Policy,
+	disable_contructor<T>
+> 
+as_element_ex(T& item,
+              Policy policy,
+		      typename boost::enable_if< boost::has_trivial_assign<T> >::type* tag0 = 0,
+		      typename boost::enable_if< boost::has_trivial_constructor<T> >::type* tag1 = 0 )
+{
+    typedef default_serializer< T,
+                                default_serialization_policy<T>,
+                                disable_contructor<T> > serializer;
+
+    return serializer(item, serializer::constructor_type(), policy);
+}
+
+/** Make object-to-element serializer */
+template<typename T, typename Policy>
+default_serializer
+<
+	T,
+	Policy,
+	default_constructor<T>
+> 
+as_element_ex(T& item, 
+              Policy policy)
+{
+    typedef default_serializer< T,
+                                Policy,
+                                default_constructor<T> > serializer;
+
+    return serializer(item, serializer::constructor_type(), policy);
+}
+
+/** Make object-to-element serializer */
+template<typename T, typename Constructor, typename Policy>
+default_serializer<T, Policy, Constructor> as_element_ex(T& item,
+                                                         Constructor cons,
+                                                         Policy policy)
+{
+    return default_serializer<T, Policy, Constructor>(item, cons, policy);
+}
+
+//================================================== NORMAL ==================================================//
+
 /** Make object-to-element serializer */
 template<typename T>
 default_loader
 <
 	T,
 	default_serialization_policy<T>,
-	default_constructor<T>
+	disable_contructor<T>
 > 
 from_element(T& item,
 		     typename boost::enable_if< boost::has_trivial_assign<T> >::type* tag0 = 0,
@@ -25,7 +140,7 @@ from_element(T& item,
 {
     typedef default_loader< T,
                             default_serialization_policy<T>,
-                            default_constructor<T> > loader;
+                            disable_contructor<T> > loader;
 
     return loader(item);
 }
@@ -36,13 +151,13 @@ default_loader
 <
 	T,
 	default_serialization_policy<T>,
-	disable_contructor<T>
+	default_constructor<T>
 > 
 from_element(T& item)
 {
     typedef default_loader< T,
                             default_serialization_policy<T>,
-                            disable_contructor<T> > loader;
+                            default_constructor<T> > loader;
 
     return loader(item);
 }
@@ -63,15 +178,6 @@ from_element(T& item,
                                 Constructor > serializer;
 
     return serializer(item, cons);
-}
-
-/** Make loader of the object from element. */
-template<typename T, typename Constructor, typename Policy>
-default_loader<T, Policy, Constructor> from_element(T& item,
-                                                    Constructor cons,
-                                                    Policy policy)
-{
-    return default_loader<T, Policy, Constructor>(item, cons, policy);
 }
 
 /** Make saver of the object to element */
@@ -133,15 +239,6 @@ from_element(T& item,
                                 Constructor > serializer;
 
     return serializer(item, cons);
-}
-
-/** Make object-to-element serializer */
-template<typename T, typename Constructor, typename Policy>
-default_serializer<T, Policy, Constructor> as_element(T& item,
-                                                      Constructor cons,
-                                                      Policy policy)
-{
-    return default_serializer<T, Policy, Constructor>(item, cons, policy);
 }
 
 //================================================== DERIVED ==================================================//

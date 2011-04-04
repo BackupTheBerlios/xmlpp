@@ -16,6 +16,10 @@ element::element(TiXmlElement* _tixmlElement) :
     node_impl<TiXmlElement>(_tixmlElement)
 {}
 
+element::element(const char* value) :
+    node_impl<TiXmlElement>( new TiXmlElement(value) )
+{}
+
 element::element(const std::string& value) :
     node_impl<TiXmlElement>( new TiXmlElement(value) )
 {}
@@ -28,18 +32,14 @@ element::element(const node& elementNode) :
     }
 }
 
-std::string element::get_text() const
+const char* element::get_text() const
 {
     assert(tixmlNode);
     const char* text = query_node()->GetText();
-    if (text) {
-        return std::string(text);
-    }
-
-    return "";
+    return text ? text : "";
 }
 
-void element::set_text(const std::string text)
+void element::set_text(const char* text)
 {
     assert(tixmlNode);
 
@@ -73,27 +73,47 @@ void element::set_text(const std::string text)
     }
 }
 
-bool element::has_attribute(const std::string& name) const
+bool element::has_attribute(const char* name) const
 {
     assert(tixmlNode);
-    const char* result = query_node()->Attribute( name.c_str() );
+    const char* result = query_node()->Attribute(name);
     return result != NULL;
 }
 
-void element::set_attribute(const std::string& name, const std::string& text)
+void element::set_attribute(const char* name, const std::string& text)
 {
     assert(tixmlNode);
     query_node()->SetAttribute(name, text);
 }
 
-std::string element::get_attribute(const std::string& name) const
+const char* element::get_attribute(const char* name) const
+{
+    assert(tixmlNode);
+    const char* result = query_node()->Attribute(name);
+    if (!result) {
+        throw dom_error("attribute '" + name + "' not found");
+    }
+    return result;
+}
+
+size_t element::read_attribute(const char* name, 
+                               char*       string, 
+                               size_t      maxSize) const
 {
     assert(tixmlNode);
     const char* result = query_node()->Attribute( name.c_str() );
     if (!result) {
-        throw dom_error("Attribute '" + name + "' not found");
+        throw dom_error("attribute '" + name + "' not found");
     }
-    return result;
+
+    size_t length = strlen(result);
+    if (string) 
+    {
+        length = std::min(maxSize, length);
+        std::copy(string, string + length, string);
+    }
+
+    return length;
 }
 
 element::attribute_iterator element::first_attribute()
@@ -108,18 +128,18 @@ element::const_attribute_iterator element::first_attribute() const
     return const_attribute_iterator( const_cast<TiXmlAttribute*>( query_node()->FirstAttribute() ) );
 }
 
-element::attribute_iterator element::first_attribute(const std::string& name)
+element::attribute_iterator element::first_attribute(const char* name)
 {
     return std::find_if( first_attribute(),
                          end_attribute(),
-                         boost::bind(&attribute::get_name, _1) == name );
+                         boost::bind(strcmp, boost::bind(&attribute::get_name, _1), name) == 0 );
 }
 
-element::const_attribute_iterator element::first_attribute(const std::string& name) const
+element::const_attribute_iterator element::first_attribute(const char* name) const
 {
     return std::find_if( first_attribute(),
                          end_attribute(),
-                         boost::bind(&attribute::get_name, _1) == name );
+                         boost::bind(strcmp, boost::bind(&attribute::get_name, _1), name) == 0 );
 }
 
 element::attribute_iterator element::end_attribute()

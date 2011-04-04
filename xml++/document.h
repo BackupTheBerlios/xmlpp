@@ -12,15 +12,15 @@ namespace xmlpp {
  * Exception occuring then there are problems during io operations,
  * e.g. file not found, or you have insufficent permissions 
  */
-class io_error :
+class file_error :
     public std::runtime_error
 {
 public:
-    io_error() : 
-        std::runtime_error("IO error") {}
-    io_error(const io_error& rhs) : 
+    file_error() : 
+        std::runtime_error("file error") {}
+    file_error(const file_error& rhs) : 
         std::runtime_error(rhs) {}
-    explicit io_error(const std::string& msg) : 
+    explicit file_error(const std::string& msg) : 
         std::runtime_error(msg) {}
 };
 
@@ -33,19 +33,22 @@ class document :
 public:
     document();
     document(const document& rhs);
+    document(size_t size, const char* source);
     virtual ~document();
 
-    /** Set document source
+    /** Set document source.
 	 * @param size - size of the source.
      * @param source - string containing xml file.
+     * @throws dom_error
      */
     void set_source(size_t size, const char* source);
 
     /** Set document source
      * TODO: Split file errors & dom errors
-     * @param _fileName - name of the xml formatted file
+     * @param fileName - name of the xml formatted file
+     * @throws dom_error, file_error
      */
-    void set_file_source(const std::string& _fileName, TiXmlEncoding encoding = TIXML_DEFAULT_ENCODING);
+    void set_file_source(const std::string& fileName, TiXmlEncoding encoding = TIXML_DEFAULT_ENCODING);
 
     /** Does nothing. Overload this function to implement required
      *  actions after the document has been loaded.
@@ -69,13 +72,13 @@ public:
      * @param name - name of the element
      * @return iterator addressing first child element with specified name
      */
-    element_iterator first_child_element(const std::string& name);
+    element_iterator first_child_element(const char* name);
 
     /** Get iterator to the first child element with the specified name
      * @param name - name of the element
      * @return iterator addressing first child element with specified name
      */
-    const_element_iterator first_child_element(const std::string& name) const;
+    const_element_iterator first_child_element(const char* name) const;
 
     /**
      * Get iterator to the node after last element

@@ -75,6 +75,9 @@ public:
     explicit element(TiXmlElement* _tixmlElement);
 
     /** Create element with specified value */
+    explicit element(const char* value);
+
+    /** Create element with specified value */
     explicit element(const std::string& value);
 
     /** Try interpret node as element. Could throw dom_error */
@@ -94,14 +97,14 @@ public:
     /** Text of the element( Same as TiXmlElement::GetText() )
      * @return text of the element
      */
-    std::string get_text() const;
+    const char* get_text() const;
 
     /** Get attribute value by the name
      * @param output value
      * @return attribute value
      */
     template<class T>
-    T& get_attribute_value(const std::string& name, T& value) const
+    T& get_attribute_value(const char* name, T& value) const
     {
         if ( has_attribute(name) )
         {
@@ -118,6 +121,16 @@ public:
         throw dom_error("Attribute not found");
     }
 
+    /** Get attribute value by the name
+     * @return attribute value
+     */
+    template<class T>
+    T& get_attribute_value(const char* name) const
+    {
+        T value;
+        return get_attribute_value(name, value);
+    }
+
     /**
      * Set text of the element.
      * For example: There is <b></b> tag. After SetText("txt") it became <b>txt</b>.
@@ -125,7 +138,7 @@ public:
      * Example3: <b><d/>txt2</b> -> <b>txt<d/></b>
      * @param text of the element
      */
-    void set_text(const std::string text);
+    void set_text(const char* text);
 
     /**
      * Move to next sibling
@@ -139,29 +152,41 @@ public:
      * @param name - name of the attribute.
      * @param text - text of the attribute.
      */
-    void set_attribute(const std::string& name, const std::string& text);
+    void set_attribute(const char* name, const std::string& text);
 
     /**
      * Check if element has attribute with specified name
      * @param name - name of the attribute
      * @return true if has
      */
-    bool has_attribute(const std::string& name) const;
+    bool has_attribute(const char* name) const;
 
     /** Get attribute value by the name
      * @return value of the attribute with specified name
+     * @throws dom_error if attribute not found.
      */
-    std::string get_attribute(const std::string& name) const;
+    const char* get_attribute(const char* name) const;
+
+    /** Read attribute value by name.
+     * @param name - name of the attribute.
+     * @param string - output string, if NULL then function returns the length of the attribute string.
+     * @param maxSize - max length of the string to store.
+     * @return number of stored symbols.
+     * @throws dom_error if attribute not found.
+     */
+    size_t read_attribute(const char* name, 
+                          char*       string, 
+                          size_t      maxSize) const;
 
     /** Get iterator addressing first attribute with specified name
      * @param name - name of the attribute
      */
-    attribute_iterator first_attribute(const std::string& name);
+    attribute_iterator first_attribute(const char* name);
 
     /** Get iterator addressing first attribute with specified name
      * @param name - name of the attribute
      */
-    const_attribute_iterator first_attribute(const std::string& name) const;
+    const_attribute_iterator first_attribute(const char* name) const;
 
     /** Get iterator addressing first attribute
      * @return iterator addressing first attribute
@@ -190,9 +215,9 @@ public:
  * @param defaultValue - default value for the attribute if it wasn't found.
  */
 template<typename T>
-T read_attribute(const std::string& name, 
-                 const element&     elem, 
-                 T                  defaultValue)
+T read_attribute(const char*    name, 
+                 const element& elem, 
+                 T              defaultValue)
 {
     if ( elem.has_attribute(name) )
     {
@@ -216,8 +241,8 @@ T read_attribute(const std::string& name,
  * @return extracted attribute.
  */
 template<typename T>
-T read_attribute(const std::string& name, 
-                 const element&     elem)
+T read_attribute(const char*    name, 
+                 const element& elem)
 {
     if ( elem.has_attribute(name) )
     {

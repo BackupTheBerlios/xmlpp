@@ -17,7 +17,8 @@ template< typename OutIterator,
 class container_loader
 {
 public:
-    typedef element xmlpp_holder_type;
+    typedef element     xmlpp_holder_type;
+    typedef Constructor constructor_type;
 
 public:
     container_loader( OutIterator outIter_, 
@@ -89,7 +90,8 @@ template<typename InIterator,
 class container_serializer
 {
 public:
-    typedef element xmlpp_holder_type;
+    typedef element     xmlpp_holder_type;
+    typedef Constructor constructor_type;
 
 public:
     container_serializer( InIterator    firstIter_,
@@ -478,6 +480,132 @@ as_string( Container& values,
                                   typename Container::value_type > serializer;
 
     return serializer( values.begin(), values.end(), std::back_inserter(values) );
+}
+//================================================== CUSTOM ==================================================//
+
+template<typename OutIterator, typename Policy>
+container_loader
+< 
+    OutIterator,
+    typename iterator_traits<OutIterator>::value_type,
+    Policy
+>
+from_element_set_ex( OutIterator out,
+                     Policy      policy,
+				     ENABLE_IF_ITERATOR(OutIterator) )
+{
+    typedef container_loader< OutIterator,
+                              typename iterator_traits<OutIterator>::value_type,
+                              Policy > serializer;
+
+    return serializer(out, serializer::constructor_type(), policy);
+}
+
+/** Make loader, loading container elements from corresponding xml elements.
+ * @tparam Container - container type. By default enabled for std::vector, std::list, std::deque. 
+ * @see enable_for_container
+ */ 
+template<typename Container, typename Policy>
+container_loader
+< 
+    std::back_insert_iterator<Container>,
+    typename Container::value_type,
+    Policy
+>
+from_element_set_ex( Container& values,
+                     ENABLE_IF_CONTAINER(Container) )
+{
+    typedef container_loader< std::back_insert_iterator<Container>,
+                              typename Container::value_type,
+                              Policy > serializer;
+
+    return serializer( std::back_inserter(values), serializer::constructor_type(), policy );
+}
+
+template<typename InIterator, typename Policy>
+container_saver
+< 
+    InIterator,  
+	typename iterator_traits<InIterator>::value_type,
+    Policy
+>
+to_element_set_ex( InIterator begin, 
+                   InIterator end,
+                   Policy policy,
+			       ENABLE_IF_ITERATOR(InIterator) )
+{
+    typedef container_saver< InIterator,
+                             Policy > serializer;
+
+    return serializer(begin, end, policy);
+}
+
+/** Make saver, saving container elements to corresponding xml elements.
+ * @tparam Container - container type. By default enabled for std::vector, std::list, std::deque. 
+ * @see enable_for_container
+ */ 
+template<typename Container, typename Policy>
+container_saver
+< 
+    typename Container::const_iterator,
+	typename Container::value_type,
+    Policy
+>
+to_element_set_ex( const Container& values,
+                   ENABLE_IF_CONTAINER(Container) )
+{
+    typedef container_saver< typename Container::const_iterator,
+							 typename Container::value_type,
+                             Policy > serializer;
+
+    return serializer(values.begin(), values.end(), policy);
+}
+
+template<typename InIterator, typename OutIterator, typename Policy>
+container_serializer
+<
+    InIterator,
+    OutIterator,
+    typename iterator_traits<OutIterator>::value_type,
+    Policy
+>
+as_element_set_ex( InIterator begin, 
+				   InIterator end, 
+				   OutIterator out,
+                   Policy policy,
+				   ENABLE_IF_ITERATOR(InIterator),
+				   ENABLE_IF_ITERATOR(OutIterator) )
+{
+    typedef container_serializer< InIterator,
+                                  OutIterator,
+                                  typename iterator_traits<OutIterator>::value_type,
+                                  Policy > serializer;
+
+    return serializer(begin, end, out, serializer::contructor_type(), policy);
+}
+
+/** Make serializer, saving and loading container elements to/from corresponding elements.
+ * @tparam Container - container type. By default enabled for std::vector, std::list, std::deque. 
+ * @see enable_for_container
+ */ 
+template<typename Container, typename Policy>
+container_serializer
+< 
+    typename Container::iterator,
+    std::back_insert_iterator<Container>,
+    typename Container::value_type,
+    Policy
+>
+as_element_set_ex( Container& values,
+                   Policy policy,
+                   ENABLE_IF_CONTAINER(Container) )
+{
+    typedef container_serializer< typename Container::iterator,
+								  std::back_insert_iterator<Container>,
+								  typename Container::value_type,
+								  Policy > serializer;
+
+    return serializer(values.begin(), values.end(), std::back_inserter(values), serializer::constructor_type(), policy);
 }
 
 //================================================== ELEMENT ==================================================//

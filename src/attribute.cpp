@@ -2,24 +2,24 @@
 
 using namespace xmlpp;
 
-std::string attribute::get_name() const
+const char* attribute::get_name() const
 {
     assert(tixmlAttribute);
     return tixmlAttribute->Name();
 }
 
-std::string attribute::get_value() const
+const char* attribute::get_value() const
 {
     assert(tixmlAttribute);
-    return tixmlAttribute->ValueStr();
+    return tixmlAttribute->Value();
 }
 
-void attribute::set_name(const std::string& name) const
+void attribute::set_name(const char* name) const
 {
     tixmlAttribute->SetName(name);
 }
 
-void attribute::set_value(const std::string& value) const
+void attribute::set_value(const char* value) const
 {
     tixmlAttribute->SetValue(value);
 }

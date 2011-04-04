@@ -16,13 +16,13 @@ node::node(TiXmlNode* _tixmlNode) :
 {
 }
 
-std::string node::get_value() const
+const char* node::get_value() const
 {
     assert(tixmlNode);
     return tixmlNode->Value();
 }
 
-void node::set_value(const std::string& newVal)
+void node::set_value(const char* newVal)
 {
     assert(tixmlNode);
     tixmlNode->SetValue(newVal);

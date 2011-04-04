@@ -64,12 +64,12 @@ public:
     /** Get value of the xml element
      * @return value of the xml element
      */
-    std::string get_value() const;
+    const char* get_value() const;
 
     /** Setup new value to the element
      * @param new value
      */
-    void set_value(const std::string& newVal);
+    void set_value(const char* newVal);
 
     /** One step up the DOM
      * @return iterator addresing parent element
@@ -114,12 +114,12 @@ public:
     /** Get iterator to the first child node with specified name
      * @return iterator addressing first child node
      */
-    element_iterator first_child_element(const std::string& value);
+    element_iterator first_child_element(const char* value);
 
     /** Get const iterator to the first child element with specified name
      * @return const iterator addressing first child element
      */
-    const_element_iterator first_child_element(const std::string& value) const;
+    const_element_iterator first_child_element(const char* value) const;
 
     /** Get iterator to the node after last element
      * @return iterator addressing node after last element

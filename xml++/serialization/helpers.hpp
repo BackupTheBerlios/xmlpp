@@ -293,14 +293,14 @@ struct default_serialization_policy<T*, Holder>
     typedef Holder xmlpp_holder_type;
 
     template<typename Document>
-    void load(const Document& d, const xmlpp_holder_type& e, T& obj) 
+    void load(const Document& d, const xmlpp_holder_type& e, T*& obj) 
     { 
         assert(obj);
         obj->load(d, e);
     }
 
     template<typename Document>
-    void save(Document& d, xmlpp_holder_type& e, const T& obj) const
+    void save(Document& d, xmlpp_holder_type& e, const T*& obj) const
     {
         assert(obj);
         obj->save(d, e);
@@ -458,6 +458,7 @@ class default_loader
 {
 public:
     typedef typename Policy::xmlpp_holder_type xmlpp_holder_type;
+	typedef Constructor			               constructor_type;
 
 public:
     explicit default_loader( T&          obj_, 
@@ -559,7 +560,8 @@ template< typename T,
 class default_serializer
 {
 public:
-    typedef typename Policy::xmlpp_holder_type xmlpp_holder_type;
+    typedef typename Policy::xmlpp_holder_type  xmlpp_holder_type;
+    typedef Constructor                         constructor_type;
 
 public:
     explicit default_serializer( T&          obj_, 
@@ -604,6 +606,7 @@ class default_serializer< T, Policy, disable_contructor<T> >
 {
 public:
     typedef typename Policy::xmlpp_holder_type xmlpp_holder_type;
+    typedef disable_contructor<T>              constructor_type;
 
 public:
     explicit default_serializer( T&					   obj_, 

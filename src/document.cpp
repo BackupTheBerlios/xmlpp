@@ -4,7 +4,7 @@
 using namespace std;
 using namespace xmlpp;
 
-document::document()  :
+document::document() :
     node_impl<TiXmlDocument>(new TiXmlDocument)
 {
 }
@@ -12,6 +12,12 @@ document::document()  :
 document::document(const document& rhs) :
     fileName(rhs.fileName)
 {
+}
+
+document(size_t size, const char* source) :
+    node_impl<TiXmlDocument>(new TiXmlDocument)
+{
+    set_source(size, source);
 }
 
 document::~document()
@@ -31,7 +37,7 @@ void document::set_source(size_t size, const char* source)
 void document::set_file_source(const std::string& _fileName, TiXmlEncoding encoding)
 {
     if ( !query_node()->LoadFile(_fileName, encoding) ) {
-        throw io_error( string("Loading error: ") + query_node()->ErrorDesc() );
+        throw file_error( string("Loading error: ") + query_node()->ErrorDesc() );
     }
     fileName = _fileName;
     this->on_load();
@@ -49,13 +55,13 @@ const_element_iterator document::first_child_element() const
     return const_element_iterator( const_cast<TiXmlElement*>(pElem) );
 }
 
-element_iterator document::first_child_element(const std::string& value)
+element_iterator document::first_child_element(const char* value)
 {
     TiXmlElement* pElem = query_node()->FirstChildElement(value);
     return element_iterator(pElem);
 }
 
-const_element_iterator document::first_child_element(const std::string& value) const
+const_element_iterator document::first_child_element(const char* value) const
 {
     const TiXmlElement* pElem = query_node()->FirstChildElement(value);
     return const_element_iterator( const_cast<TiXmlElement*>(pElem) );

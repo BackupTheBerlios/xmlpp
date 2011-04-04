@@ -27,18 +27,18 @@ public:
     /** Get name of the attribute
      * @return attribute name
      */
-    std::string get_name() const;
+    const char* get_name() const;
 
     /** Get attrbiute value
      * @return value of the attribute
      */
-    std::string get_value() const;
+    const char* get_value() const;
 
     /** Set attribute name */
-    void set_name(const std::string& name) const;
+    void set_name(const char* name) const;
 
     /** Set attribute value */
-    void set_value(const std::string& value) const;
+    void set_value(const char* value) const;
 
     /**
      * Get attrbiute depending on the type. Assert if fails
