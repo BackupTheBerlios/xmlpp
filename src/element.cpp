@@ -73,6 +73,24 @@ void element::set_text(const char* text)
     }
 }
 
+void element::add_child(node& n)
+{
+    assert(tixmlNode);
+    tixmlNode->LinkEndChild( n.get_tixml_node() );
+}
+
+void element::insert_after_child(const node_iterator& where, node& n)
+{
+    assert(tixmlNode && where);
+    tixmlNode->InsertAfterChild( where->get_tixml_node(), *n.get_tixml_node() );
+}
+
+void element::insert_before_child(const node_iterator& where, node& n)
+{
+    assert(tixmlNode && where);
+    tixmlNode->InsertBeforeChild( where->get_tixml_node(), *n.get_tixml_node() );
+}
+
 bool element::has_attribute(const char* name) const
 {
     assert(tixmlNode);
@@ -91,7 +109,7 @@ const char* element::get_attribute(const char* name) const
     assert(tixmlNode);
     const char* result = query_node()->Attribute(name);
     if (!result) {
-        throw dom_error("attribute '" + name + "' not found");
+        throw dom_error(std::string("attribute '") + name + "' not found");
     }
     return result;
 }
@@ -101,9 +119,9 @@ size_t element::read_attribute(const char* name,
                                size_t      maxSize) const
 {
     assert(tixmlNode);
-    const char* result = query_node()->Attribute( name.c_str() );
+    const char* result = query_node()->Attribute(name);
     if (!result) {
-        throw dom_error("attribute '" + name + "' not found");
+        throw dom_error(std::string("attribute '") + name + "' not found");
     }
 
     size_t length = strlen(result);

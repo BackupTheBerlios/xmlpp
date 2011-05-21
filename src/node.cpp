@@ -84,14 +84,14 @@ const_element_iterator node::first_child_element() const
     return const_element_iterator(pElem);
 }
 
-element_iterator node::first_child_element(const std::string& value)
+element_iterator node::first_child_element(const char* value)
 {
     assert(tixmlNode);
     TiXmlElement* pElem = tixmlNode->FirstChildElement(value);
     return element_iterator(pElem);
 }
 
-const_element_iterator node::first_child_element(const std::string& value) const
+const_element_iterator node::first_child_element(const char* value) const
 {
     assert(tixmlNode);
     TiXmlElement* pElem = tixmlNode->FirstChildElement(value);

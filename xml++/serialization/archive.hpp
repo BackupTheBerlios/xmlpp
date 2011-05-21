@@ -9,7 +9,7 @@ namespace xmlpp {
 
 /** Input archive for boost::serialization which reads data from xml++ nodes */
 class iarchive :
-    public boost::archive::detail::common_iarchive<archive>
+    public boost::archive::detail::common_iarchive<iarchive>
 {
 public:    
     // permit serialization system privileged access to permit
@@ -20,7 +20,7 @@ public:
 
 /** Output archive for boost::serialization which stores data in xml++ nodes */
 class oarchive :
-    public boost::archive::detail::common_oarchive<archive>
+    public boost::archive::detail::common_oarchive<oarchive>
 {
 public:    
     // permit serialization system privileged access to permit
