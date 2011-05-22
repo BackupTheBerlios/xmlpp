@@ -50,6 +50,9 @@ public:
      */
     void set_file_source(const std::string& fileName, TiXmlEncoding encoding = TIXML_DEFAULT_ENCODING);
 
+    /** Dump document to file */
+    void print_file(const std::string& fileName) const;
+
     /** Does nothing. Overload this function to implement required
      *  actions after the document has been loaded.
      */

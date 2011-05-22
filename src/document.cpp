@@ -42,6 +42,11 @@ void document::set_file_source(const std::string& _fileName, TiXmlEncoding encod
     this->on_load();
 }
 
+void document::print_file(const std::string& fileName) const 
+{ 
+    get_tixml_document()->WriteFile(fileName); 
+}
+
 element_iterator document::first_child_element()
 {
     TiXmlElement* pElem = query_node()->FirstChildElement();
