@@ -33,7 +33,7 @@ struct text_serialization_policy
         if ( ss.fail() ) {
             throw dom_error("Can't read element value.");
         }
-        e.set_text( ss.str() );
+        e.set_text( ss.str().c_str() );
     }
 
     bool valid(const T&, s_state) const { return true; }

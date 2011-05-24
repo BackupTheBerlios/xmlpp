@@ -41,8 +41,8 @@ struct generic_holder< name_value_pair<Serializer>, xmlpp::attribute >
     attribute operator () (const name_value_pair<Serializer>& nvp, node& parent)
     {
         element elem(parent);
-        elem.set_attribute(nvp.name, "");
-        return *elem.first_attribute(nvp.name);
+        elem.set_attribute(nvp.name.c_str(), "");
+        return *elem.first_attribute(nvp.name.c_str());
     }
 };
 

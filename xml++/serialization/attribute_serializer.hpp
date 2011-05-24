@@ -33,7 +33,7 @@ struct attribute_serialization_policy
         if ( ss.fail() ) {
             throw dom_error("Can't read element value.");
         }
-        a.set_value( ss.str() );
+        a.set_value( ss.str().c_str() );
     }
 
     bool valid(const T&, xmlpp::s_state) const { return true; }

@@ -242,7 +242,7 @@ public:
         {
             ss << (*iter);
         }
-        e.set_text( ss.str() );
+        e.set_text( ss.str().c_str() );
     }
 
 private:
@@ -268,7 +268,7 @@ public:
     template<typename Document>
     void load(const Document& d, const xmlpp_holder_type& e)
     {
-		if ( e.get_text().empty() ) {
+		if ( !e.get_text() || e.get_text()[0] == '\0' ) {
 			return;
 		}
 

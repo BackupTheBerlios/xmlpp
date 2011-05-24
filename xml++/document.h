@@ -61,6 +61,9 @@ public:
     /** Get tiny xml document. Use with care. */
     TiXmlDocument* get_tixml_document() { return query_node(); }
 
+    /** Get tiny xml document. Use with care. */
+    const TiXmlDocument* get_tixml_document() const { return query_node(); }
+
     /** Get iterator to the first child node
      * @return iterator addressing first child node
      */

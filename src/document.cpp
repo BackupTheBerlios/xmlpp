@@ -1,4 +1,5 @@
 #include "document.h"
+#include "tinyxml.h"
 #include <algorithm>
 
 namespace xmlpp {
@@ -44,7 +45,7 @@ void document::set_file_source(const std::string& _fileName, TiXmlEncoding encod
 
 void document::print_file(const std::string& fileName) const 
 { 
-    get_tixml_document()->WriteFile(fileName); 
+    get_tixml_document()->SaveFile(fileName); 
 }
 
 element_iterator document::first_child_element()
