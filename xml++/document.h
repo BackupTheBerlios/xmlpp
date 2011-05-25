@@ -50,7 +50,7 @@ public:
      */
     void set_file_source(const std::string& fileName, TiXmlEncoding encoding = TIXML_DEFAULT_ENCODING);
 
-    /** Dump document to file */
+    /** Dump document to file. Also you can use operator <<. */
     void print_file(const std::string& fileName) const;
 
     /** Does nothing. Overload this function to implement required

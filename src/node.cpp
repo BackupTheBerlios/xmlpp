@@ -119,6 +119,12 @@ bool node::operator == (const node& rhs) const
     return tixmlNode == rhs.tixmlNode;
 }
 
+std::ostream& operator << (std::ostream& os, const node& n)
+{
+    assert(n.tixmlNode);
+    return os << *n.tixmlNode;
+}
+
 ////////////////////////////////////////////////////////////////////////
 
 void replace_node( node& what,

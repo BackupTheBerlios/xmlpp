@@ -137,6 +137,9 @@ public:
     /** Compare nodes */
     bool operator == (const node& rhs) const;
 
+    /** Output node to stream */
+    friend std::ostream& operator << (std::ostream& os, const node& n);
+
 protected:
     TiXmlNode* tixmlNode;
 };
