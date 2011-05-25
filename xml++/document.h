@@ -64,6 +64,9 @@ public:
     /** Get tiny xml document. Use with care. */
     const TiXmlDocument* get_tixml_document() const { return query_node(); }
 
+	/** Add child element to the document. Be carefull - well format xml documents must have single root child */
+    void add_child(node& n);
+
     /** Get iterator to the first child node
      * @return iterator addressing first child node
      */
