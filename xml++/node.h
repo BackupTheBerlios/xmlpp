@@ -139,6 +139,9 @@ public:
 
     /** Output node to stream */
     friend std::ostream& operator << (std::ostream& os, const node& n);
+	
+    /** Read node from istream */
+    friend std::istream& operator >> (std::istream& is, node& n);
 
 protected:
     TiXmlNode* tixmlNode;

@@ -91,6 +91,12 @@ void element::insert_before_child(const node_iterator& where, node& n)
     tixmlNode->InsertBeforeChild( where->get_tixml_node(), *n.get_tixml_node() );
 }
 
+element_iterator element::next_sibling_element() const
+{
+    assert(tixmlNode);
+	return element_iterator(tixmlNode->NextSiblingElement());
+}
+
 bool element::has_attribute(const char* name) const
 {
     assert(tixmlNode);

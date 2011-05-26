@@ -125,6 +125,12 @@ std::ostream& operator << (std::ostream& os, const node& n)
     return os << *n.tixmlNode;
 }
 
+std::istream& operator >> (std::istream& is, node& n)
+{
+    assert(n.tixmlNode);
+    return is >> *n.tixmlNode;
+}
+
 ////////////////////////////////////////////////////////////////////////
 
 void replace_node( node& what,
