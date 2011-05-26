@@ -53,6 +53,9 @@ public:
     /** Dump document to file. Also you can use operator <<. */
     void print_file(const std::string& fileName) const;
 
+	/** Print readable xml file to the stream. */
+	void print_file(std::ostream& os) const;
+
     /** Does nothing. Overload this function to implement required
      *  actions after the document has been loaded.
      */

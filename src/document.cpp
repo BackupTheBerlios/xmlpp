@@ -53,6 +53,14 @@ void document::print_file(const std::string& fileName) const
     get_tixml_document()->SaveFile(fileName); 
 }
 
+void document::print_file(std::ostream& os) const
+{
+	TiXmlPrinter printer;
+	printer.SetIndent("\t");
+	get_tixml_document()->Accept(&printer);
+	os << printer.CStr();
+}
+
 element_iterator document::first_child_element()
 {
     TiXmlElement* pElem = query_node()->FirstChildElement();
