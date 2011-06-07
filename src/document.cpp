@@ -25,9 +25,9 @@ document::~document()
     delete tixmlNode;
 }
     
-void document::add_child(node& n)
+node_iterator document::add_child(node& n)
 {
-	get_tixml_document()->LinkEndChild( n.get_tixml_node() );
+	return node_iterator( get_tixml_document()->LinkEndChild( n.get_tixml_node() ) );
 }
 
 void document::set_source(size_t size, const char* source)

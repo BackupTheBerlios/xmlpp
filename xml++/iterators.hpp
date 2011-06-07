@@ -7,6 +7,10 @@
 
 namespace xmlpp {
 
+// forward
+template<typename T>
+class node_iterator_impl;
+
 /**
  * Pattern for element iterators
  */
@@ -55,6 +59,11 @@ public:
     template<class P>
     element_iterator_impl(const element_iterator_impl<P>& rhs) : 
         element( const_cast<TiXmlElement*>(rhs->get_tixml_element()) ) {}
+		
+    /// construct from xmlpp::node_iterator if can
+    template<class P>
+    element_iterator_impl(const node_iterator_impl<P>& rhs) : 
+        element( dynamic_cast<TiXmlElement*>(rhs->get_tixml_node()) ) {}
 
     /// construct from xmlpp::element
     element_iterator_impl(T& _element) : 

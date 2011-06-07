@@ -73,22 +73,22 @@ void element::set_text(const char* text)
     }
 }
 
-void element::add_child(node& n)
+node_iterator element::add_child(node& n)
 {
     assert(tixmlNode);
-    tixmlNode->LinkEndChild( n.get_tixml_node() );
+    return node_iterator( tixmlNode->LinkEndChild( n.get_tixml_node() ) );
 }
 
-void element::insert_after_child(const node_iterator& where, node& n)
+node_iterator element::insert_after_child(const node_iterator& where, node& n)
 {
     assert(tixmlNode && where);
-    tixmlNode->InsertAfterChild( where->get_tixml_node(), *n.get_tixml_node() );
+    return node_iterator( tixmlNode->InsertAfterChild( where->get_tixml_node(), *n.get_tixml_node() ) );
 }
 
-void element::insert_before_child(const node_iterator& where, node& n)
+node_iterator element::insert_before_child(const node_iterator& where, node& n)
 {
     assert(tixmlNode && where);
-    tixmlNode->InsertBeforeChild( where->get_tixml_node(), *n.get_tixml_node() );
+    return node_iterator( tixmlNode->InsertBeforeChild( where->get_tixml_node(), *n.get_tixml_node() ) );
 }
 
 element_iterator element::next_sibling_element() const

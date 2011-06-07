@@ -143,21 +143,21 @@ public:
     /**
      * Add child to the element.
      */
-    void add_child(node& n);
+    node_iterator add_child(node& n);
 
     /**
      * Add child to the element after specified child.
      * @param where - child afther which to insert node.
      * @param n - node to insert.
      */
-    void insert_after_child(const node_iterator& where, node& n);
+    node_iterator insert_after_child(const node_iterator& where, node& n);
 
     /**
      * Add child to the element after specified child.
      * @param where - child afther which to insert node.
      * @param n - node to insert.
      */
-    void insert_before_child(const node_iterator& where, node& n);
+    node_iterator insert_before_child(const node_iterator& where, node& n);
 
     /**
      * Move to next sibling
