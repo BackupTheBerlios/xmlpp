@@ -121,11 +121,19 @@ public:
         throw dom_error("Attribute not found");
     }
 
+	template<typename T>
+	void set_attribute_value(const char* name, const T& value)
+	{
+		std::ostringstream ss;
+		ss << value;
+		set_attribute( name, ss.str() );
+	}
+
     /** Get attribute value by the name
      * @return attribute value
      */
     template<class T>
-    T& get_attribute_value(const char* name) const
+    T get_attribute_value(const char* name) const
     {
         T value;
         return get_attribute_value(name, value);
