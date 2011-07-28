@@ -513,6 +513,7 @@ container_loader
     Policy
 >
 from_element_set_ex( Container& values,
+                     Policy     policy,
                      ENABLE_IF_CONTAINER(Container) )
 {
     typedef container_loader< std::back_insert_iterator<Container>,
@@ -552,6 +553,7 @@ container_saver
     Policy
 >
 to_element_set_ex( const Container& values,
+                   Policy           policy,
                    ENABLE_IF_CONTAINER(Container) )
 {
     typedef container_saver< typename Container::const_iterator,
